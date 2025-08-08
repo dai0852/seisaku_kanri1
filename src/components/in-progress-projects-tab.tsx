@@ -18,9 +18,14 @@ export function InProgressProjectsTab() {
   }, [projects]);
 
   return (
-    <div className="grid gap-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">進行中の物件</h2>
+            <Card>
+                <CardHeader>
+                    <CardTitle>進行中の物件</CardTitle>
+                    <CardDescription>{inProgressProjects.length}件のプロジェクトが進行中です。</CardDescription>
+                </CardHeader>
+            </Card>
             <AddProjectDialog>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -28,12 +33,7 @@ export function InProgressProjectsTab() {
                 </Button>
             </AddProjectDialog>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>進行中の物件</CardTitle>
-            <CardDescription>{inProgressProjects.length}件のプロジェクトが進行中です。</CardDescription>
-          </CardHeader>
-        </Card>
+        
         <Accordion type="multiple" className="w-full space-y-4">
           {inProgressProjects.map(project => (
             <AccordionItem key={project.id} value={project.id} className="border-0">

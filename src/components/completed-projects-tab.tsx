@@ -13,8 +13,7 @@ export function CompletedProjectsTab() {
   }, [projects]);
 
   return (
-     <div className="grid gap-6">
-        <h2 className="text-2xl font-bold tracking-tight">完了した物件</h2>
+     <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>完了した物件一覧</CardTitle>
