@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, type ReactNode } from "react"
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday } from "date-fns"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, startOfWeek, addDays, isSameMonth } from "date-fns"
 import { ja } from "date-fns/locale"
 import { Button } from "./ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -27,11 +27,13 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
   const [currentDate, setCurrentDate] = useState(new Date())
   const [draggedItem, setDraggedItem] = useState<DraggableItem | null>(null)
 
-  const firstDayOfMonth = useMemo(() => startOfMonth(currentDate), [currentDate])
-  const lastDayOfMonth = useMemo(() => endOfMonth(currentDate), [currentDate])
+  const firstDayOfMonth = useMemo(() => startOfMonth(currentDate), [currentDate]);
+  const calendarStartDate = useMemo(() => startOfWeek(firstDayOfMonth), [firstDayOfMonth]);
 
-  const daysInMonth = useMemo(() => eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth }), [firstDayOfMonth, lastDayOfMonth])
-  const startingDayIndex = getDay(firstDayOfMonth)
+  const calendarDays = useMemo(() => {
+    return Array.from({ length: 42 }).map((_, i) => addDays(calendarStartDate, i));
+  }, [calendarStartDate]);
+
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: any) => {
     const draggable: DraggableItem = itemType === 'task' 
@@ -75,26 +77,26 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
             <div key={day} className="py-2">{day}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 grid-rows-5">
-          {Array.from({ length: startingDayIndex }).map((_, i) => (
-            <div key={`empty-${i}`} className="border-r border-b h-32"></div>
-          ))}
-          {daysInMonth.map(day => {
+        <div className="grid grid-cols-7 grid-rows-6">
+          {calendarDays.map(day => {
             const dateStr = format(day, "yyyy-MM-dd");
             const items = getItemsForDate(dateStr);
+            const isCurrentMonth = isSameMonth(day, currentDate);
+            
             return (
               <div
                 key={day.toString()}
                 className={cn(
                     "border-r border-b p-2 h-32 relative flex flex-col transition-colors duration-200",
                     isToday(day) ? "bg-blue-50 dark:bg-blue-900/20" : "",
+                    !isCurrentMonth && "text-muted-foreground bg-muted/20",
                     onDateClick ? "cursor-pointer hover:bg-muted/50" : ""
                 )}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, day)}
                 onClick={() => onDateClick?.(dateStr)}
               >
-                <time dateTime={dateStr} className="font-semibold">{format(day, "d")}</time>
+                <time dateTime={dateStr} className={cn("font-semibold", !isCurrentMonth && "opacity-60")}>{format(day, "d")}</time>
                 <div className="flex-grow overflow-y-auto space-y-1 mt-1 text-xs">
                     {items.map(item => (
                         <div key={item.id || item.task.id} draggable onDragStart={(e) => handleDragStart(e, item)}>
@@ -105,9 +107,6 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
               </div>
             )
           })}
-           {Array.from({ length: 42 - daysInMonth.length - startingDayIndex }).map((_, i) => (
-            <div key={`empty-end-${i}`} className="border-r border-b h-32"></div>
-          ))}
         </div>
       </CardContent>
     </Card>
