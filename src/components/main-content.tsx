@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { FullPageLoader } from "./full-page-loader";
 
 export function MainContent() {
-  const { approved, loading } = useAuth();
+  const { user, approved, loading } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -22,6 +22,11 @@ export function MainContent() {
   };
 
   if (loading) {
+    return <FullPageLoader />;
+  }
+
+  if (!user) {
+    // This case should be handled by the AuthProvider redirect, but as a fallback
     return <FullPageLoader />;
   }
 

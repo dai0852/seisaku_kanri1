@@ -2,10 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
-import { FullPageLoader } from '@/components/full-page-loader';
 
 interface AuthContextType {
   user: User | null;
@@ -23,12 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-      } else {
-        setUser(null);
-        setApproved(false);
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      if (!firebaseUser) {
         setLoading(false);
       }
     });
@@ -48,8 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setApproved(false);
         }
         setLoading(false);
+      }, (error) => {
+        console.error("Error fetching user approval status:", error);
+        setApproved(false);
+        setLoading(false);
       });
     } else {
+       setApproved(false);
        setLoading(false);
     }
     
@@ -63,20 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading) {
       const isAuthPage = pathname === '/login' || pathname === '/signup';
+      
       if (!user && !isAuthPage) {
         router.push('/login');
       } else if (user && isAuthPage) {
         router.push('/');
       }
     }
-  }, [user, loading, pathname, router]);
+  }, [user, approved, loading, pathname, router]);
 
 
   const value = { user, approved, loading };
-  
-  if (loading) {
-      return <FullPageLoader />;
-  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
