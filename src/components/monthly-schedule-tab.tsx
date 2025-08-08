@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo, useState } from "react"
@@ -36,19 +37,19 @@ export function MonthlyScheduleTab() {
     const { project, task } = item;
     return (
       <div 
-        className="flex items-start gap-2 p-1.5 rounded-md bg-background border-l-4 shadow-sm cursor-grab active:cursor-grabbing"
+        className="flex items-center gap-2 p-1.5 rounded-md bg-background border-l-4 shadow-sm cursor-grab active:cursor-grabbing w-full overflow-hidden"
         style={{ borderLeftColor: project.color }}
       >
         <Checkbox
             id={`cal-task-${task.id}`}
             checked={task.completed}
             onCheckedChange={(checked) => updateTask(project.id, task.id, { completed: !!checked })}
-            className="mt-0.5"
+            className="shrink-0"
             style={{ color: project.color }}
         />
-        <div>
-            <p className="font-medium leading-tight">{task.name}</p>
-            <p className="text-muted-foreground text-[10px]">{project.name}</p>
+        <div className="flex-grow overflow-hidden">
+            <p className="font-medium leading-tight truncate">{task.name}</p>
+            <p className="text-muted-foreground text-[10px] truncate">{project.name}</p>
         </div>
       </div>
     );
