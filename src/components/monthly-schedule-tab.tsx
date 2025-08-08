@@ -25,14 +25,20 @@ export function MonthlyScheduleTab() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedDepartment, setSelectedDepartment] = useState<Department | 'all'>('all')
+
+  const inProgressProjects = useMemo(() => {
+    return projects.filter(p => p.status === 'in-progress');
+  }, [projects]);
   
   const tasksForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
     const allTasks = getTasksForDate(selectedDate);
+    const filteredByProjectStatus = allTasks.filter(item => item.project.status === 'in-progress');
+
     if (selectedDepartment === 'all') {
-        return allTasks;
+        return filteredByProjectStatus;
     }
-    return allTasks.filter(item => item.task.department === selectedDepartment);
+    return filteredByProjectStatus.filter(item => item.task.department === selectedDepartment);
   }, [selectedDate, getTasksForDate, selectedDepartment]);
 
 
@@ -61,16 +67,13 @@ export function MonthlyScheduleTab() {
     );
   };
 
-  const inProgressProjects = useMemo(() => {
-    return projects.filter(p => p.status === 'in-progress');
-  }, [projects]);
-
   const getFilteredTasksForDate = useCallback((date: string) => {
     const tasks = getTasksForDate(date);
+    const inProgressTasks = tasks.filter(item => item.project.status === 'in-progress');
     if (selectedDepartment === 'all') {
-      return tasks;
+      return inProgressTasks;
     }
-    return tasks.filter(item => item.task.department === selectedDepartment);
+    return inProgressTasks.filter(item => item.task.department === selectedDepartment);
   }, [getTasksForDate, selectedDepartment]);
 
 

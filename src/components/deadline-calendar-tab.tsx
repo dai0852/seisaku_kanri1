@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useAppContext } from "@/context/app-context"
@@ -5,7 +6,7 @@ import type { Project } from "@/lib/types"
 import { CalendarBase } from "./calendar-base"
 import { Badge } from "./ui/badge";
 import { ProjectLegend } from "./project-legend";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Checkbox } from "./ui/checkbox";
 import { cn } from "@/lib/utils";
 
@@ -46,12 +47,16 @@ export function DeadlineCalendarTab() {
     return projects.filter(p => p.status === 'in-progress');
   }, [projects]);
 
+  const getInProgressDeadlinesForDate = useCallback((date: string) => {
+    return getDeadlinesForDate(date).filter(p => p.status === 'in-progress');
+  }, [getDeadlinesForDate]);
+
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
       <div className="flex-grow">
         <CalendarBase
-          getItemsForDate={getDeadlinesForDate}
+          getItemsForDate={getInProgressDeadlinesForDate}
           renderItem={renderDeadline}
           onItemDrop={handleDeadlineDrop}
           itemType="deadline"
