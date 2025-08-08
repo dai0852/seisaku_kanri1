@@ -9,6 +9,7 @@ import { Button } from "./ui/button"
 import { PlusCircle } from "lucide-react"
 import { AddProjectDialog } from "./add-project-dialog"
 import { Badge } from "./ui/badge"
+import { cn } from "@/lib/utils"
 
 export function InProgressProjectsTab() {
   const { projects, updateTask } = useAppContext()
@@ -64,7 +65,7 @@ export function InProgressProjectsTab() {
                                         />
                                         <div className="grid gap-0.5 w-full">
                                             <div className="flex items-center justify-between">
-                                                <label htmlFor={`task-${task.id}`} className="font-medium">{task.name}</label>
+                                                <label htmlFor={`task-${task.id}`} className={cn("font-medium", task.completed && "line-through")}>{task.name}</label>
                                                 <Badge variant="secondary">{task.department}</Badge>
                                             </div>
                                             <p className="text-sm text-muted-foreground">期限: {task.dueDate}</p>
