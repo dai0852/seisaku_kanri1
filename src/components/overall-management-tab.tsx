@@ -16,11 +16,6 @@ export function OverallManagementTab() {
   const inProgressProjects = useMemo(() => {
     return projects.filter(p => p.status === 'in-progress');
   }, [projects]);
-  
-  const completedProjects = useMemo(() => {
-    return projects.filter(p => p.status === 'completed');
-  }, [projects]);
-
 
   return (
     <div className="space-y-6">
@@ -34,27 +29,6 @@ export function OverallManagementTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{inProgressProjects.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">完了プロジェクト</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedProjects.length}</div>
-          </CardContent>
-        </Card>
-         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">遅延・要確認</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-             <p className="text-xs text-muted-foreground">
-              今後のアップデートで実装予定
-            </p>
           </CardContent>
         </Card>
       </div>
