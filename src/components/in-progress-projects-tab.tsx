@@ -20,11 +20,11 @@ export function InProgressProjectsTab() {
   return (
     <div className="grid gap-6">
         <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">進行中の物件一覧</h2>
+            <h2 className="text-2xl font-bold tracking-tight">進行中の物件</h2>
             <AddProjectDialog>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    物件を追加
+                    新規物件を追加
                 </Button>
             </AddProjectDialog>
         </div>

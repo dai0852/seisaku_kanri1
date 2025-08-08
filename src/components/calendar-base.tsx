@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useMemo, useCallback, type ReactNode } from "react"
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isEqual, parseISO } from "date-fns"
+import { useState, useMemo, type ReactNode } from "react"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday } from "date-fns"
 import { ja } from "date-fns/locale"
 import { Button } from "./ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -67,7 +67,7 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
             <h2 className="text-xl md:text-2xl font-bold w-48 text-center">{format(currentDate, "yyyy年 MMMM", { locale: ja })}</h2>
             <Button variant="outline" size="icon" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
         </div>
-        <Button variant="outline" onClick={goToToday}>Today</Button>
+        <Button variant="outline" onClick={goToToday}>今日</Button>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-7 text-center font-semibold text-sm text-muted-foreground border-b">

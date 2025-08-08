@@ -14,10 +14,10 @@ export function CompletedProjectsTab() {
 
   return (
      <div className="grid gap-6">
-        <h2 className="text-2xl font-bold tracking-tight">完了物件</h2>
+        <h2 className="text-2xl font-bold tracking-tight">完了した物件</h2>
         <Card>
           <CardHeader>
-            <CardTitle>完了した物件</CardTitle>
+            <CardTitle>完了した物件一覧</CardTitle>
             <CardDescription>これまでに{completedProjects.length}件のプロジェクトが完了しました。</CardDescription>
           </CardHeader>
         </Card>
@@ -33,14 +33,20 @@ export function CompletedProjectsTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {completedProjects.map(project => (
-                  <TableRow key={project.id}>
-                    <TableCell className="font-medium">{project.name}</TableCell>
-                    <TableCell>{project.deadline}</TableCell>
-                    <TableCell>{project.salesRep}</TableCell>
-                    <TableCell>{project.designer}</TableCell>
+                {completedProjects.length > 0 ? (
+                  completedProjects.map(project => (
+                    <TableRow key={project.id}>
+                      <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell>{project.deadline}</TableCell>
+                      <TableCell>{project.salesRep}</TableCell>
+                      <TableCell>{project.designer}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">完了した物件はありません。</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
