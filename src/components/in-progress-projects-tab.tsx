@@ -48,29 +48,31 @@ export function InProgressProjectsTab() {
           {inProgressProjects.map(project => (
             <AccordionItem key={project.id} value={project.id} className="border-0">
                 <Card className="overflow-hidden">
-                    <AccordionTrigger className="p-6 hover:no-underline group">
-                        <div className="flex w-full items-center justify-between gap-4">
-                            <div className="text-left flex-grow">
-                                <p className="font-bold text-lg">{project.name}</p>
-                                <p className="text-sm text-muted-foreground">納期: {project.deadline}</p>
+                    <div className="flex items-center group p-6">
+                        <AccordionTrigger className="flex-grow hover:no-underline p-0">
+                            <div className="flex w-full items-center justify-between gap-4">
+                                <div className="text-left flex-grow">
+                                    <p className="font-bold text-lg">{project.name}</p>
+                                    <p className="text-sm text-muted-foreground">納期: {project.deadline}</p>
+                                </div>
+                                <div className="text-right text-sm flex-shrink-0">
+                                    <p>営業: {project.salesRep}</p>
+                                    <p>デザイナー: {project.designer}</p>
+                                </div>
                             </div>
-                            <div className="text-right text-sm flex-shrink-0">
-                                <p>営業: {project.salesRep}</p>
-                                <p>デザイナー: {project.designer}</p>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-muted-foreground hover:text-destructive shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => {
-                                e.stopPropagation();
-                                setProjectToDelete(project.id);
-                                }}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </AccordionTrigger>
+                        </AccordionTrigger>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ml-4"
+                            onClick={(e) => {
+                            e.stopPropagation();
+                            setProjectToDelete(project.id);
+                            }}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                     <AccordionContent className="bg-muted/30">
                         <div className="p-6 pt-0">
                             <h4 className="font-semibold mb-2">工程タスク</h4>
