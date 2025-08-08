@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${sourceCodePro.variable} font-body antialiased`}>
         <AuthProvider>
-            {children}
+          {children}
         </AuthProvider>
         <Toaster />
       </body>
