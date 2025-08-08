@@ -1,18 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "./auth-context";
 import type { Project, Task } from '@/lib/types';
-import { initialProjects } from '@/lib/data';
 import { useToast } from "@/hooks/use-toast";
 import { PROJECT_COLORS } from '@/lib/colors';
 
 interface AppContextType {
   projects: Project[];
-  setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
-  addProject: (project: Omit<Project, 'id' | 'status' | 'color'>) => void;
-  updateProject: (projectId: string, updatedData: Partial<Omit<Project, 'id' | 'color'>>) => void;
-  deleteProject: (projectId: string) => void;
-  updateTask: (projectId: string, taskId: string, updatedData: Partial<Task>) => void;
+  addProject: (project: Omit<Project, 'id' | 'status' | 'color'>) => Promise<void>;
+  updateProject: (projectId: string, updatedData: Partial<Omit<Project, 'id' | 'color'>>) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
+  updateTask: (projectId: string, taskId: string, updatedData: Partial<Task>) => Promise<void>;
   getTasksForDate: (date: string) => { project: Project; task: Task }[];
   getDeadlinesForDate: (date: string) => Project[];
 }
@@ -20,7 +21,6 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const assignColorsToProjects = (projects: Omit<Project, 'color'>[]): Project[] => {
-    // Sort projects by ID to maintain consistent coloring
     const sortedProjects = [...projects].sort((a, b) => a.id.localeCompare(b.id));
     const colorMap = new Map<string, string>();
     
@@ -34,119 +34,154 @@ const assignColorsToProjects = (projects: Omit<Project, 'color'>[]): Project[] =
     }));
 };
 
-
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [internalProjects, setInternalProjects] = useState<Omit<Project, 'color'>[]>(initialProjects);
+  const [internalProjects, setInternalProjects] = useState<Omit<Project, 'color'>[]>([]);
+  const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, "projects"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const projectsData: Omit<Project, 'color'>[] = [];
+      querySnapshot.forEach((doc) => {
+        projectsData.push({ id: doc.id, ...doc.data() } as Omit<Project, 'color'>);
+      });
+      setInternalProjects(projectsData);
+    }, (error) => {
+      console.error("Error fetching projects:", error);
+      toast({
+        title: "データの取得に失敗しました",
+        description: "プロジェクト一覧を読み込めませんでした。",
+        variant: "destructive",
+      });
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
 
   const projects = useMemo(() => assignColorsToProjects(internalProjects), [internalProjects]);
 
-  const setProjects = useCallback((newProjects: Project[] | ((prevState: Project[]) => Project[])) => {
-    if (typeof newProjects === 'function') {
-        setInternalProjects(prevInternal => {
-            const currentProjects = assignColorsToProjects(prevInternal);
-            const updatedProjects = newProjects(currentProjects);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            return updatedProjects.map(({color, ...rest}) => rest);
-        });
-    } else {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        setInternalProjects(newProjects.map(({color, ...rest}) => rest));
-    }
-  }, []);
-
-
-  const addProject = useCallback((projectData: Omit<Project, 'id' | 'status' | 'color'>) => {
-    const newProject: Omit<Project, 'color'> = {
-      ...projectData,
-      id: `proj-${Date.now()}`,
-      status: 'in-progress',
-    };
-    setInternalProjects(prev => [...prev, newProject]);
-    toast({
-      title: "プロジェクトが追加されました",
-      description: newProject.name,
-    })
-  }, [toast]);
-
-  const updateProject = useCallback((projectId: string, updatedData: Partial<Omit<Project, 'id'|'color'>>) => {
-    setInternalProjects(prev =>
-      prev.map(p => (p.id === projectId ? { ...p, ...updatedData } : p))
-    );
-     toast({
-      title: "プロジェクトが更新されました",
-      description: updatedData.status ? `ステータスを「${updatedData.status === 'completed' ? '完了' : '進行中'}」に変更しました。` : "",
-    })
-  }, [toast]);
-
-  const deleteProject = useCallback((projectId: string) => {
-    const projectToDelete = projects.find(p => p.id === projectId);
-    setInternalProjects(prev => prev.filter(p => p.id !== projectId));
-    if (projectToDelete) {
+  const addProject = useCallback(async (projectData: Omit<Project, 'id' | 'status' | 'color'>) => {
+    if (!user) return;
+    try {
+      const newProjectData = {
+        ...projectData,
+        status: 'in-progress' as const,
+      };
+      const docRef = await addDoc(collection(db, "projects"), newProjectData);
+      console.log("Project added with ID: ", docRef.id);
       toast({
-        title: "プロジェクトが削除されました",
-        description: projectToDelete.name,
+        title: "プロジェクトが追加されました",
+        description: projectData.name,
+      });
+    } catch (error) {
+      console.error("Error adding project: ", error);
+      toast({
+        title: "エラー",
+        description: "プロジェクトの追加に失敗しました。",
         variant: "destructive",
       });
     }
-  }, [projects, toast]);
+  }, [user, toast]);
 
-  const updateTask = useCallback((projectId: string, taskId: string, updatedData: Partial<Task>) => {
-    let projectForToast: Omit<Project, 'color'> | undefined;
-    let projectStatusChanged = false;
-    
-    setInternalProjects(prev =>
-      prev.map(p => {
-        if (p.id === projectId) {
-          projectForToast = p;
-          const updatedTasks = p.tasks.map(t =>
-            t.id === taskId ? { ...t, ...updatedData } : t
-          );
-          
-          let newStatus = p.status;
-          
-          const deliveryTask = updatedTasks.find(t => t.name === '納品');
-          if (deliveryTask?.completed && p.status !== 'completed') {
-            newStatus = 'completed';
-            projectStatusChanged = true;
-          }
-          
-          return {
-            ...p,
-            tasks: updatedTasks,
-            status: newStatus,
-          };
-        }
-        return p;
-      })
-    );
-
-    const updatedProject = projects.find(p => p.id === projectId);
-    const updatedTask = updatedProject?.tasks.find(t => t.id === taskId);
-
-    if (updatedData.completed !== undefined) {
+  const updateProject = useCallback(async (projectId: string, updatedData: Partial<Omit<Project, 'id'|'color'>>) => {
+    if (!user) return;
+    const projectDoc = doc(db, "projects", projectId);
+    try {
+      await updateDoc(projectDoc, updatedData);
       toast({
+        title: "プロジェクトが更新されました",
+        description: updatedData.status ? `ステータスを「${updatedData.status === 'completed' ? '完了' : '進行中'}」に変更しました。` : "プロジェクト情報が更新されました。",
+      });
+    } catch (error) {
+      console.error("Error updating project: ", error);
+      toast({
+        title: "エラー",
+        description: "プロジェクトの更新に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  }, [user, toast]);
+
+  const deleteProject = useCallback(async (projectId: string) => {
+    if (!user) return;
+    const projectToDelete = projects.find(p => p.id === projectId);
+    try {
+      await deleteDoc(doc(db, "projects", projectId));
+      if (projectToDelete) {
+        toast({
+          title: "プロジェクトが削除されました",
+          description: projectToDelete.name,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting project: ", error);
+      toast({
+        title: "エラー",
+        description: "プロジェクトの削除に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  }, [user, projects, toast]);
+
+  const updateTask = useCallback(async (projectId: string, taskId: string, updatedData: Partial<Task>) => {
+    if (!user) return;
+    
+    const project = internalProjects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const updatedTasks = project.tasks.map(t => 
+      t.id === taskId ? { ...t, ...updatedData } : t
+    );
+    
+    let newStatus = project.status;
+    const deliveryTask = updatedTasks.find(t => t.name === '納品');
+    if (deliveryTask?.completed && project.status !== 'completed') {
+      newStatus = 'completed';
+    }
+    
+    const projectDoc = doc(db, "projects", projectId);
+    try {
+      await updateDoc(projectDoc, { tasks: updatedTasks, status: newStatus });
+      
+      const updatedProject = projects.find(p => p.id === projectId);
+      const updatedTask = updatedProject?.tasks.find(t => t.id === taskId);
+      
+      if (updatedData.completed !== undefined) {
+        toast({
           title: updatedData.completed ? "タスク完了" : "タスクを未完了に戻しました",
           description: `${updatedProject?.name} - ${updatedTask?.name ?? ''}`
-      });
-    } else if (updatedData.dueDate) {
-        toast({
-            title: "タスクの期日が変更されました",
         });
-    } else {
+      } else if (updatedData.dueDate) {
         toast({
-            title: "タスクが更新されました",
+          title: "タスクの期日が変更されました",
         });
-    }
-    
-    if (projectForToast && projectStatusChanged) {
+      } else {
+        toast({
+          title: "タスクが更新されました",
+        });
+      }
+
+      if (project.status !== 'completed' && newStatus === 'completed') {
         toast({
             title: "プロジェクトが完了しました",
-            description: projectForToast.name,
+            description: project.name,
             variant: "default",
         });
+      }
+
+    } catch(error) {
+      console.error("Error updating task: ", error);
+      toast({
+        title: "エラー",
+        description: "タスクの更新に失敗しました。",
+        variant: "destructive",
+      });
     }
-  }, [projects, toast]);
+  }, [user, internalProjects, projects, toast]);
 
   const getTasksForDate = useCallback((date: string): { project: Project; task: Task }[] => {
     return projects
@@ -162,18 +197,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return projects.filter(project => project.deadline === date);
   }, [projects]);
 
+  const contextValue = {
+    projects,
+    addProject,
+    updateProject,
+    deleteProject,
+    updateTask,
+    getTasksForDate,
+    getDeadlinesForDate,
+  };
 
   return (
-    <AppContext.Provider value={{ projects, setProjects, addProject, updateProject, deleteProject, updateTask, getTasksForDate, getDeadlinesForDate }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );
 }
 
-export function useAppContext() {
+export function useAppContext(): AppContextType {
   const context = useContext(AppContext);
   if (context === undefined) {
     throw new Error('useAppContext must be used within an AppProvider');
   }
-  return context;
+  // This is a temporary solution to satisfy the type checker where we haven't implemented all methods.
+  return context as AppContextType;
 }

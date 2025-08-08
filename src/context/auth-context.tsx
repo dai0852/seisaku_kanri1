@@ -5,6 +5,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
+import { FullPageLoader } from '@/components/full-page-loader';
 
 interface AuthContextType {
   user: User | null;
@@ -23,8 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      setLoading(true); // Start loading when auth state might be changing
       setUser(firebaseUser);
       if (!firebaseUser) {
+        setApproved(false);
         setLoading(false);
       }
     });
@@ -49,9 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setApproved(false);
         setLoading(false);
       });
-    } else {
-       setApproved(false);
-       setLoading(false);
     }
     
     return () => {
@@ -71,10 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.push('/');
       }
     }
-  }, [user, approved, loading, pathname, router]);
+  }, [user, loading, pathname, router]);
 
 
   const value = { user, approved, loading };
+
+  // Render a loader while waiting for auth state to resolve
+  if (loading) {
+    return <FullPageLoader />;
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
