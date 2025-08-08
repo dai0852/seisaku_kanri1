@@ -49,7 +49,7 @@ export default function SignupPage() {
       await setDoc(doc(db, "users", user.uid), {
         email: user.email,
         approved: false,
-        role: 'user',
+        role: 'user', // Add role field
       });
       
       toast({
