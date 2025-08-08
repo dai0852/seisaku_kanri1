@@ -41,7 +41,7 @@ export function MonthlyScheduleTab() {
       <Badge
         className={cn(
           "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
-          task.completed && "opacity-50 line-through"
+          task.completed && "line-through"
         )}
         style={{ backgroundColor: project.color }}
       >
