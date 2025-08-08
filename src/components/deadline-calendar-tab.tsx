@@ -6,6 +6,8 @@ import { CalendarBase } from "./calendar-base"
 import { Badge } from "./ui/badge";
 import { ProjectLegend } from "./project-legend";
 import { useMemo } from "react";
+import { Checkbox } from "./ui/checkbox";
+import { cn } from "@/lib/utils";
 
 export function DeadlineCalendarTab() {
   const { projects, updateProject, getDeadlinesForDate } = useAppContext()
@@ -14,14 +16,30 @@ export function DeadlineCalendarTab() {
     updateProject(projectId, { deadline: newDate });
   };
 
+  const handleProjectCompleteToggle = (project: Project) => {
+    const newStatus = project.status === 'in-progress' ? 'completed' : 'in-progress';
+    updateProject(project.id, { status: newStatus });
+  };
+
+
   const renderDeadline = (project: Project) => (
-    <Badge 
-        variant="default" 
-        className="w-full justify-start truncate cursor-grab active:cursor-grabbing text-white"
+    <div className="flex items-center gap-2">
+      <Checkbox
+        id={`deadline-check-${project.id}`}
+        checked={project.status === 'completed'}
+        onCheckedChange={() => handleProjectCompleteToggle(project)}
+      />
+      <Badge
+        variant="default"
+        className={cn(
+            "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
+            project.status === 'completed' && "line-through"
+        )}
         style={{ backgroundColor: project.color }}
-    >
-      {project.name}
-    </Badge>
+      >
+        {project.name}
+      </Badge>
+    </div>
   );
   
   const inProgressProjects = useMemo(() => {

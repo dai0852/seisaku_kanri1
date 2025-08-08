@@ -10,7 +10,7 @@ interface AppContextType {
   projects: Project[];
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
   addProject: (project: Omit<Project, 'id' | 'status' | 'color'>) => void;
-  updateProject: (projectId: string, updatedData: Partial<Omit<Project, 'color'>>) => void;
+  updateProject: (projectId: string, updatedData: Partial<Omit<Project, 'id' | 'color'>>) => void;
   updateTask: (projectId: string, taskId: string, updatedData: Partial<Task>) => void;
   getTasksForDate: (date: string) => { project: Project; task: Task }[];
   getDeadlinesForDate: (date: string) => Project[];
@@ -68,18 +68,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
   }, [toast]);
 
-  const updateProject = useCallback((projectId: string, updatedData: Partial<Omit<Project, 'color'>>) => {
+  const updateProject = useCallback((projectId: string, updatedData: Partial<Omit<Project, 'id'|'color'>>) => {
     setInternalProjects(prev =>
       prev.map(p => (p.id === projectId ? { ...p, ...updatedData } : p))
     );
      toast({
       title: "プロジェクトが更新されました",
-      description: updatedData.status === 'in-progress' ? "ステータスを「進行中」に変更しました。" : "",
+      description: updatedData.status ? `ステータスを「${updatedData.status === 'completed' ? '完了' : '進行中'}」に変更しました。` : "",
     })
   }, [toast]);
 
   const updateTask = useCallback((projectId: string, taskId: string, updatedData: Partial<Task>) => {
     let projectForToast: Omit<Project, 'color'> | undefined;
+    let projectStatusChanged = false;
     
     setInternalProjects(prev =>
       prev.map(p => {
@@ -94,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const deliveryTask = updatedTasks.find(t => t.name === '納品');
           if (deliveryTask?.completed && p.status !== 'completed') {
             newStatus = 'completed';
+            projectStatusChanged = true;
           }
           
           return {
@@ -124,10 +126,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
     }
     
-    if (projectForToast && projectForToast.status === 'in-progress' && updatedProject?.status === 'completed') {
+    if (projectForToast && projectStatusChanged) {
         toast({
             title: "プロジェクトが完了しました",
-            description: updatedProject.name,
+            description: projectForToast.name,
             variant: "default",
         });
     }
@@ -144,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [projects]);
 
   const getDeadlinesForDate = useCallback((date: string): Project[] => {
-    return projects.filter(project => project.deadline === date && project.status === 'in-progress');
+    return projects.filter(project => project.deadline === date);
   }, [projects]);
 
 
