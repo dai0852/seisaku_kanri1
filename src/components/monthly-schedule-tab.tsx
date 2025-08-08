@@ -1,9 +1,9 @@
 
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useAppContext } from "@/context/app-context"
-import type { Project, Task } from "@/lib/types"
+import { DEPARTMENTS, Department, type Project, type Task } from "@/lib/types"
 import { CalendarBase } from "./calendar-base"
 import { Checkbox } from "./ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog"
@@ -12,6 +12,8 @@ import { ja } from "date-fns/locale"
 import { ProjectLegend } from "./project-legend"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { Card, CardHeader } from "./ui/card"
 
 interface TaskItem {
     project: Project;
@@ -22,8 +24,17 @@ export function MonthlyScheduleTab() {
   const { projects, updateTask, getTasksForDate } = useAppContext()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | 'all'>('all')
   
-  const tasksForSelectedDate = selectedDate ? getTasksForDate(selectedDate) : [];
+  const tasksForSelectedDate = useMemo(() => {
+    if (!selectedDate) return [];
+    const allTasks = getTasksForDate(selectedDate);
+    if (selectedDepartment === 'all') {
+        return allTasks;
+    }
+    return allTasks.filter(item => item.task.department === selectedDepartment);
+  }, [selectedDate, getTasksForDate, selectedDepartment]);
+
 
   const handleTaskDrop = (taskId: string, projectId: string | undefined, newDate: string) => {
     if (!projectId) return;
@@ -54,12 +65,36 @@ export function MonthlyScheduleTab() {
     return projects.filter(p => p.status === 'in-progress');
   }, [projects]);
 
+  const getFilteredTasksForDate = useCallback((date: string) => {
+    const tasks = getTasksForDate(date);
+    if (selectedDepartment === 'all') {
+      return tasks;
+    }
+    return tasks.filter(item => item.task.department === selectedDepartment);
+  }, [getTasksForDate, selectedDepartment]);
+
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
-      <div className="flex-grow">
+      <div className="flex-grow space-y-4">
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-4">
+                    <h3 className="text-sm font-medium">担当部署で絞り込み</h3>
+                    <Select value={selectedDepartment} onValueChange={(value) => setSelectedDepartment(value as Department | 'all')}>
+                        <SelectTrigger className="w-[200px]">
+                            <SelectValue placeholder="部署を選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">すべての部署</SelectItem>
+                            {DEPARTMENTS.map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </CardHeader>
+        </Card>
         <CalendarBase
-          getItemsForDate={getTasksForDate}
+          getItemsForDate={getFilteredTasksForDate}
           renderItem={renderTask}
           onItemDrop={handleTaskDrop}
           onDateClick={handleDateClick}
