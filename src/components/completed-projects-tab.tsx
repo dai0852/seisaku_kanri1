@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useAppContext } from "@/context/app-context"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "./ui/button"
 import { Trash2, Undo2 } from "lucide-react"
@@ -25,7 +25,7 @@ export function CompletedProjectsTab() {
 
   return (
      <div className="space-y-6">
-        <Card className="shadow-sm">
+        <Card className="shadow-subtle">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -67,7 +67,7 @@ export function CompletedProjectsTab() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center">完了した物件はありません。</TableCell>
+                    <TableCell colSpan={5} className="text-center h-24">完了した物件はありません。</TableCell>
                   </TableRow>
                 )}
               </TableBody>

@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react"
 import { useAppContext } from "@/context/app-context"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "./ui/button"
-import { FolderKanban, PlusCircle, Trash2 } from "lucide-react"
-import { AddProjectDialog } from "./add-project-dialog"
+import { Trash2 } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog"
@@ -25,8 +24,8 @@ const ProjectCard = ({ project }: { project: Project }) => {
     }, [project.tasks]);
 
     return (
-        <AccordionItem value={project.id} className="border-0">
-             <Card className="overflow-hidden shadow-sm" style={{borderColor: project.color}}>
+        <AccordionItem value={project.id} className="border-b-0">
+             <Card className="overflow-hidden shadow-subtle border-l-4" style={{borderColor: project.color}}>
                 <div className="flex items-center group p-4">
                     <AccordionTrigger className="flex-grow hover:no-underline p-0">
                         <div className="flex flex-col w-full text-left gap-2">
@@ -56,12 +55,12 @@ const ProjectCard = ({ project }: { project: Project }) => {
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </div>
-                 <AccordionContent className="bg-muted/30">
-                    <div className="p-4 pt-0">
+                 <AccordionContent>
+                    <div className="px-4 pb-4 pt-0">
                         <h4 className="font-semibold mb-2 text-sm">工程タスク</h4>
                         <div className="space-y-2">
                             {project.tasks.length > 0 ? project.tasks.map(task => (
-                                <div key={task.id} className="flex items-start gap-3 rounded-md bg-background p-3">
+                                <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3">
                                     <Checkbox 
                                         id={`task-${task.id}`}
                                         checked={task.completed}
@@ -70,7 +69,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
                                     />
                                     <div className="grid gap-0.5 w-full">
                                         <div className="flex items-center justify-between">
-                                            <label htmlFor={`task-${task.id}`} className={cn("font-medium", task.completed && "line-through")}>{task.name}</label>
+                                            <label htmlFor={`task-${task.id}`} className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>{task.name}</label>
                                             <Badge variant="secondary">{task.department}</Badge>
                                         </div>
                                         <p className="text-sm text-muted-foreground">期限: {task.dueDate}</p>

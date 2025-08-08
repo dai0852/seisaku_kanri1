@@ -62,7 +62,7 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
   const goToToday = () => setCurrentDate(new Date())
 
   return (
-    <Card>
+    <Card className="shadow-subtle">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
@@ -88,8 +88,8 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
                 key={day.toString()}
                 className={cn(
                     "border-r border-b p-2 h-32 relative flex flex-col transition-colors duration-200",
-                    isToday(day) ? "bg-blue-50 dark:bg-blue-900/20" : "",
-                    !isCurrentMonth && "text-muted-foreground bg-muted/20",
+                    isToday(day) ? "bg-primary/5 dark:bg-primary/10" : "",
+                    !isCurrentMonth && "text-muted-foreground bg-muted/30",
                     onDateClick ? "cursor-pointer hover:bg-muted/50" : ""
                 )}
                 onDragOver={handleDragOver}
