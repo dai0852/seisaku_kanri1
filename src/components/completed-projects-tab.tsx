@@ -25,13 +25,7 @@ export function CompletedProjectsTab() {
 
   return (
      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>完了した物件一覧</CardTitle>
-            <CardDescription>これまでに{completedProjects.length}件のプロジェクトが完了しました。</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
