@@ -70,6 +70,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
   const deadlineValue = watch("deadline");
 
   const onSubmit: SubmitHandler<ProjectFormValues> = (data) => {
+    // Manually added tasks
     const formattedTasks = data.tasks.map((task, index) => ({
       ...task,
       id: `task-${Date.now()}-${index}`,
@@ -78,10 +79,20 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
       notes: task.notes || ""
     }));
 
+    // Auto-added delivery task
+    const deliveryTask = {
+      id: `task-${Date.now()}-delivery`,
+      name: "納品",
+      department: "配送課" as Department,
+      dueDate: format(data.deadline, "yyyy-MM-dd"),
+      notes: "",
+      completed: false
+    };
+
     addProject({
       ...data,
       deadline: format(data.deadline, "yyyy-MM-dd"),
-      tasks: formattedTasks,
+      tasks: [...formattedTasks, deliveryTask],
     });
     reset();
     setOpen(false);
@@ -165,7 +176,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                                         <SelectValue placeholder="部署を選択" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {DEPARTMENTS.map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
+                                        {DEPARTMENTS.filter(d => d !== '配送課').map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             )}

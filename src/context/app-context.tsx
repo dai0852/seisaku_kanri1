@@ -40,6 +40,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
      toast({
       title: "プロジェクトが更新されました",
+      description: updatedData.status === 'in-progress' ? "ステータスを「進行中」に変更しました。" : "",
     })
   }, [toast]);
 
@@ -51,13 +52,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
             t.id === taskId ? { ...t, ...updatedData } : t
           );
           
+          // Allow manual status change back to in-progress, so only auto-complete.
           const allTasksCompleted = updatedTasks.every(t => t.completed);
           const newStatus = allTasksCompleted && updatedTasks.length > 0 ? 'completed' : p.status;
+          
+          // If the project is being completed, but the user manually set it to in-progress, respect that.
+          const finalStatus = p.status === 'in-progress' && newStatus === 'completed' ? 'completed' : p.status;
 
           return {
             ...p,
             tasks: updatedTasks,
-            status: newStatus,
+            status: finalStatus,
           };
         }
         return p;

@@ -8,6 +8,7 @@ export const DEPARTMENTS = [
   "吹付課",
   "フォルニ課",
   "ステンドグラス課",
+  "配送課",
 ] as const;
 
 export type Department = (typeof DEPARTMENTS)[number];
