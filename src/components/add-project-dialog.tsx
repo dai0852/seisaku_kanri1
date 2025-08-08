@@ -21,6 +21,7 @@ import { CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { ja } from "date-fns/locale";
 import { Calendar } from "./ui/calendar";
 import { DEPARTMENTS, Department } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -129,7 +130,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {deadlineValue ? format(deadlineValue, "PPP") : <span>日付を選択</span>}
+                        {deadlineValue ? format(deadlineValue, "PPP", { locale: ja }) : <span>日付を選択</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -138,6 +139,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                         selected={deadlineValue}
                         onSelect={(date) => setValue("deadline", date as Date)}
                         initialFocus
+                        locale={ja}
                       />
                     </PopoverContent>
                   </Popover>
@@ -192,7 +194,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                                 className={cn("w-full justify-start text-left font-normal", !watch(`tasks.${index}.dueDate`) && "text-muted-foreground")}
                                 >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {watch(`tasks.${index}.dueDate`) ? format(watch(`tasks.${index}.dueDate`), "PPP") : <span>日付を選択</span>}
+                                {watch(`tasks.${index}.dueDate`) ? format(watch(`tasks.${index}.dueDate`), "PPP", { locale: ja }) : <span>日付を選択</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -201,6 +203,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                                 selected={watch(`tasks.${index}.dueDate`)}
                                 onSelect={(date) => setValue(`tasks.${index}.dueDate`, date as Date)}
                                 initialFocus
+                                locale={ja}
                                 />
                             </PopoverContent>
                         </Popover>
