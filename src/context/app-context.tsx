@@ -11,6 +11,7 @@ interface AppContextType {
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
   addProject: (project: Omit<Project, 'id' | 'status' | 'color'>) => void;
   updateProject: (projectId: string, updatedData: Partial<Omit<Project, 'id' | 'color'>>) => void;
+  deleteProject: (projectId: string) => void;
   updateTask: (projectId: string, taskId: string, updatedData: Partial<Task>) => void;
   getTasksForDate: (date: string) => { project: Project; task: Task }[];
   getDeadlinesForDate: (date: string) => Project[];
@@ -77,6 +78,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       description: updatedData.status ? `ステータスを「${updatedData.status === 'completed' ? '完了' : '進行中'}」に変更しました。` : "",
     })
   }, [toast]);
+
+  const deleteProject = useCallback((projectId: string) => {
+    const projectToDelete = projects.find(p => p.id === projectId);
+    setInternalProjects(prev => prev.filter(p => p.id !== projectId));
+    if (projectToDelete) {
+      toast({
+        title: "プロジェクトが削除されました",
+        description: projectToDelete.name,
+        variant: "destructive",
+      });
+    }
+  }, [projects, toast]);
 
   const updateTask = useCallback((projectId: string, taskId: string, updatedData: Partial<Task>) => {
     let projectForToast: Omit<Project, 'color'> | undefined;
@@ -151,7 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
   return (
-    <AppContext.Provider value={{ projects, setProjects, addProject, updateProject, updateTask, getTasksForDate, getDeadlinesForDate }}>
+    <AppContext.Provider value={{ projects, setProjects, addProject, updateProject, deleteProject, updateTask, getTasksForDate, getDeadlinesForDate }}>
       {children}
     </AppContext.Provider>
   );

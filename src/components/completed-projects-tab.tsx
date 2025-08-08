@@ -1,18 +1,27 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useAppContext } from "@/context/app-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "./ui/button"
-import { Undo2 } from "lucide-react"
+import { Trash2, Undo2 } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog"
 
 export function CompletedProjectsTab() {
-  const { projects, updateProject } = useAppContext()
+  const { projects, updateProject, deleteProject } = useAppContext()
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const completedProjects = useMemo(() => {
     return projects.filter(p => p.status === 'completed');
   }, [projects]);
+  
+  const handleDelete = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete);
+      setProjectToDelete(null);
+    }
+  };
 
   return (
      <div className="space-y-6">
@@ -42,7 +51,7 @@ export function CompletedProjectsTab() {
                       <TableCell>{project.deadline}</TableCell>
                       <TableCell>{project.salesRep}</TableCell>
                       <TableCell>{project.designer}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-2">
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -50,6 +59,14 @@ export function CompletedProjectsTab() {
                         >
                           <Undo2 className="mr-2 h-4 w-4" />
                           進行中に戻す
+                        </Button>
+                         <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setProjectToDelete(project.id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          削除
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -63,6 +80,20 @@ export function CompletedProjectsTab() {
             </Table>
           </CardContent>
         </Card>
+         <AlertDialog open={!!projectToDelete} onOpenChange={(open) => !open && setProjectToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
+                <AlertDialogDescription>
+                    この操作は元に戻すことはできません。プロジェクトと関連するすべてのタスクが完全に削除されます。
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setProjectToDelete(null)}>キャンセル</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>削除</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </div>
   );
 }

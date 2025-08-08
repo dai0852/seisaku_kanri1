@@ -1,22 +1,31 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useAppContext } from "@/context/app-context"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "./ui/button"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Trash2 } from "lucide-react"
 import { AddProjectDialog } from "./add-project-dialog"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog"
 
 export function InProgressProjectsTab() {
-  const { projects, updateTask } = useAppContext()
+  const { projects, updateTask, deleteProject } = useAppContext()
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const inProgressProjects = useMemo(() => {
     return projects.filter(p => p.status === 'in-progress');
   }, [projects]);
+
+  const handleDelete = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete);
+      setProjectToDelete(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -39,16 +48,27 @@ export function InProgressProjectsTab() {
           {inProgressProjects.map(project => (
             <AccordionItem key={project.id} value={project.id} className="border-0">
                 <Card className="overflow-hidden">
-                    <AccordionTrigger className="p-6 hover:no-underline">
-                        <div className="flex w-full items-center justify-between">
-                            <div className="text-left">
+                    <AccordionTrigger className="p-6 hover:no-underline group">
+                        <div className="flex w-full items-center justify-between gap-4">
+                            <div className="text-left flex-grow">
                                 <p className="font-bold text-lg">{project.name}</p>
                                 <p className="text-sm text-muted-foreground">納期: {project.deadline}</p>
                             </div>
-                            <div className="text-right text-sm">
+                            <div className="text-right text-sm flex-shrink-0">
                                 <p>営業: {project.salesRep}</p>
                                 <p>デザイナー: {project.designer}</p>
                             </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-muted-foreground hover:text-destructive shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                e.stopPropagation();
+                                setProjectToDelete(project.id);
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted/30">
@@ -80,6 +100,20 @@ export function InProgressProjectsTab() {
             </AccordionItem>
           ))}
         </Accordion>
+        <AlertDialog open={!!projectToDelete} onOpenChange={(open) => !open && setProjectToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
+                <AlertDialogDescription>
+                    この操作は元に戻すことはできません。プロジェクトと関連するすべてのタスクが完全に削除されます。
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setProjectToDelete(null)}>キャンセル</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>削除</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
