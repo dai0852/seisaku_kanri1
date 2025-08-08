@@ -1,8 +1,9 @@
 "use client";
 
-import { FolderKanban, ListTodo, CalendarClock } from "lucide-react";
+import { FolderKanban, ListTodo, CalendarClock, CheckCircle, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { OverallManagementTab } from "@/components/overall-management-tab";
+import { InProgressProjectsTab } from "@/components/in-progress-projects-tab";
+import { CompletedProjectsTab } from "@/components/completed-projects-tab";
 import { MonthlyScheduleTab } from "@/components/monthly-schedule-tab";
 import { DeadlineCalendarTab } from "@/components/deadline-calendar-tab";
 
@@ -16,11 +17,15 @@ export function MainContent() {
         </div>
       </header>
       <main className="flex-1 p-4 md:p-6 lg:p-8">
-        <Tabs defaultValue="overall" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:w-[400px]">
-            <TabsTrigger value="overall">
-              <ListTodo className="mr-2 h-4 w-4" />
-              全体管理
+        <Tabs defaultValue="in-progress" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 md:w-auto">
+            <TabsTrigger value="in-progress">
+              <Clock className="mr-2 h-4 w-4" />
+              進行中の物件
+            </TabsTrigger>
+             <TabsTrigger value="completed">
+              <CheckCircle className="mr-2 h-4 w-4" />
+              完了した物件
             </TabsTrigger>
             <TabsTrigger value="schedule">
               <CalendarClock className="mr-2 h-4 w-4" />
@@ -31,8 +36,11 @@ export function MainContent() {
               納期
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="overall" className="mt-6">
-            <OverallManagementTab />
+          <TabsContent value="in-progress" className="mt-6">
+            <InProgressProjectsTab />
+          </TabsContent>
+          <TabsContent value="completed" className="mt-6">
+            <CompletedProjectsTab />
           </TabsContent>
           <TabsContent value="schedule" className="mt-6">
             <MonthlyScheduleTab />

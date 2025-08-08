@@ -12,9 +12,9 @@ export const initialProjects: Project[] = [
     designer: '佐藤 花子',
     status: 'in-progress',
     tasks: [
-      { id: 'task-1-1', name: 'ワイヤーフレーム作成', dueDate: format(addDays(today, 2), 'yyyy-MM-dd'), notes: 'トップページと主要な下層ページ', completed: true },
-      { id: 'task-1-2', name: 'デザインカンプ作成', dueDate: format(addDays(today, 7), 'yyyy-MM-dd'), notes: 'クライアントのフィードバック待ち', completed: false },
-      { id: 'task-1-3', name: 'コーディング', dueDate: format(addDays(today, 15), 'yyyy-MM-dd'), notes: '', completed: false },
+      { id: 'task-1-1', name: 'ワイヤーフレーム作成', department: 'デザイナー', dueDate: format(addDays(today, 2), 'yyyy-MM-dd'), notes: 'トップページと主要な下層ページ', completed: true },
+      { id: 'task-1-2', name: 'デザインカンプ作成', department: 'デザイナー', dueDate: format(addDays(today, 7), 'yyyy-MM-dd'), notes: 'クライアントのフィードバック待ち', completed: false },
+      { id: 'task-1-3', name: 'コーディング', department: 'コンピューター課', dueDate: format(addDays(today, 15), 'yyyy-MM-dd'), notes: '', completed: false },
     ],
   },
   {
@@ -25,8 +25,8 @@ export const initialProjects: Project[] = [
     designer: '田中 美咲',
     status: 'in-progress',
     tasks: [
-      { id: 'task-2-1', name: '要件定義', dueDate: format(subDays(today, 5), 'yyyy-MM-dd'), notes: '機能一覧を確定', completed: true },
-      { id: 'task-2-2', name: 'DB設計', dueDate: format(today, 'yyyy-MM-dd'), notes: '', completed: false },
+      { id: 'task-2-1', name: '要件定義', department: '営業', dueDate: format(subDays(today, 5), 'yyyy-MM-dd'), notes: '機能一覧を確定', completed: true },
+      { id: 'task-2-2', name: 'DB設計', department: 'コンピューター課', dueDate: format(today, 'yyyy-MM-dd'), notes: '', completed: false },
     ],
   },
   {

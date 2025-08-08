@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 interface AppContextType {
   projects: Project[];
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
-  addProject: (project: Omit<Project, 'id' | 'status' | 'tasks'>) => void;
+  addProject: (project: Omit<Project, 'id' | 'status'>) => void;
   updateProject: (projectId: string, updatedData: Partial<Project>) => void;
   updateTask: (projectId: string, taskId: string, updatedData: Partial<Task>) => void;
   getTasksForDate: (date: string) => { project: Project; task: Task }[];
@@ -21,12 +21,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const { toast } = useToast();
 
-  const addProject = useCallback((projectData: Omit<Project, 'id' | 'status' | 'tasks'>) => {
+  const addProject = useCallback((projectData: Omit<Project, 'id' | 'status'>) => {
     const newProject: Project = {
       ...projectData,
       id: `proj-${Date.now()}`,
       status: 'in-progress',
-      tasks: [],
     };
     setProjects(prev => [...prev, newProject]);
     toast({
@@ -48,11 +47,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProjects(prev =>
       prev.map(p => {
         if (p.id === projectId) {
+          const updatedTasks = p.tasks.map(t =>
+            t.id === taskId ? { ...t, ...updatedData } : t
+          );
+          
+          const allTasksCompleted = updatedTasks.every(t => t.completed);
+          const newStatus = allTasksCompleted && updatedTasks.length > 0 ? 'completed' : p.status;
+
           return {
             ...p,
-            tasks: p.tasks.map(t =>
-              t.id === taskId ? { ...t, ...updatedData } : t
-            ),
+            tasks: updatedTasks,
+            status: newStatus,
           };
         }
         return p;
