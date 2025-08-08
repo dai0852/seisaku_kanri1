@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { format, parseISO } from "date-fns"
 import { ja } from "date-fns/locale"
 import { ProjectLegend } from "./project-legend"
+import { Badge } from "./ui/badge"
+import { cn } from "@/lib/utils"
 
 interface TaskItem {
     project: Project;
@@ -36,22 +38,15 @@ export function MonthlyScheduleTab() {
   const renderTask = (item: TaskItem) => {
     const { project, task } = item;
     return (
-      <div 
-        className="flex items-center gap-2 p-1.5 rounded-md bg-background border-l-4 shadow-sm cursor-grab active:cursor-grabbing w-full overflow-hidden"
-        style={{ borderLeftColor: project.color }}
+      <Badge
+        className={cn(
+          "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
+          task.completed && "opacity-50 line-through"
+        )}
+        style={{ backgroundColor: project.color }}
       >
-        <Checkbox
-            id={`cal-task-${task.id}`}
-            checked={task.completed}
-            onCheckedChange={(checked) => updateTask(project.id, task.id, { completed: !!checked })}
-            className="shrink-0"
-            style={{ color: project.color }}
-        />
-        <div className="flex-grow overflow-hidden">
-            <p className="font-medium leading-tight truncate">{task.name}</p>
-            <p className="text-muted-foreground text-[10px] truncate">{project.name}</p>
-        </div>
-      </div>
+        {task.name}
+      </Badge>
     );
   };
 
