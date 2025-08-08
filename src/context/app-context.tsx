@@ -89,10 +89,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             t.id === taskId ? { ...t, ...updatedData } : t
           );
           
-          const allTasksCompleted = updatedTasks.every(t => t.completed);
-          
           let newStatus = p.status;
-          if (allTasksCompleted && updatedTasks.length > 0 && p.status !== 'completed') {
+          
+          const deliveryTask = updatedTasks.find(t => t.name === '納品');
+          if (deliveryTask?.completed && p.status !== 'completed') {
             newStatus = 'completed';
           }
           
@@ -107,11 +107,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 
     const updatedProject = projects.find(p => p.id === projectId);
+    const updatedTask = updatedProject?.tasks.find(t => t.id === taskId);
 
     if (updatedData.completed !== undefined) {
       toast({
           title: updatedData.completed ? "タスク完了" : "タスクを未完了に戻しました",
-          description: `${updatedProject?.name} - ${updatedData.name ?? ''}`
+          description: `${updatedProject?.name} - ${updatedTask?.name ?? ''}`
       });
     } else if (updatedData.dueDate) {
         toast({

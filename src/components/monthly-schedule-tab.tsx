@@ -90,7 +90,7 @@ export function MonthlyScheduleTab() {
                             className="mt-1"
                         />
                         <div className="grid gap-0.5 w-full">
-                            <label htmlFor={`dialog-task-${task.id}`} className="font-medium text-base">{task.name}</label>
+                            <label htmlFor={`dialog-task-${task.id}`} className={cn("font-medium text-base", task.completed && "line-through")}>{task.name}</label>
                             <p className="text-sm font-semibold" style={{color: project.color}}>{project.name}</p>
                             {task.notes && <p className="text-sm text-muted-foreground mt-1">{task.notes}</p>}
                         </div>
