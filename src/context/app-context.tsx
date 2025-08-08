@@ -1,15 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 import type { Project, Task } from '@/lib/types';
 import { initialProjects } from '@/lib/data';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
+import { PROJECT_COLORS } from '@/lib/colors';
 
 interface AppContextType {
   projects: Project[];
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
-  addProject: (project: Omit<Project, 'id' | 'status'>) => void;
-  updateProject: (projectId: string, updatedData: Partial<Project>) => void;
+  addProject: (project: Omit<Project, 'id' | 'status' | 'color'>) => void;
+  updateProject: (projectId: string, updatedData: Partial<Omit<Project, 'color'>>) => void;
   updateTask: (projectId: string, taskId: string, updatedData: Partial<Task>) => void;
   getTasksForDate: (date: string) => { project: Project; task: Task }[];
   getDeadlinesForDate: (date: string) => Project[];
@@ -17,25 +18,58 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const assignColorsToProjects = (projects: Omit<Project, 'color'>[]): Project[] => {
+    // Sort projects by ID to maintain consistent coloring
+    const sortedProjects = [...projects].sort((a, b) => a.id.localeCompare(b.id));
+    const colorMap = new Map<string, string>();
+    
+    sortedProjects.forEach((project, index) => {
+        colorMap.set(project.id, PROJECT_COLORS[index % PROJECT_COLORS.length]);
+    });
+
+    return projects.map(project => ({
+        ...project,
+        color: colorMap.get(project.id)!,
+    }));
+};
+
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [internalProjects, setInternalProjects] = useState<Omit<Project, 'color'>[]>(initialProjects);
   const { toast } = useToast();
 
-  const addProject = useCallback((projectData: Omit<Project, 'id' | 'status'>) => {
-    const newProject: Project = {
+  const projects = useMemo(() => assignColorsToProjects(internalProjects), [internalProjects]);
+
+  const setProjects = useCallback((newProjects: Project[] | ((prevState: Project[]) => Project[])) => {
+    if (typeof newProjects === 'function') {
+        setInternalProjects(prevInternal => {
+            const currentProjects = assignColorsToProjects(prevInternal);
+            const updatedProjects = newProjects(currentProjects);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            return updatedProjects.map(({color, ...rest}) => rest);
+        });
+    } else {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        setInternalProjects(newProjects.map(({color, ...rest}) => rest));
+    }
+  }, []);
+
+
+  const addProject = useCallback((projectData: Omit<Project, 'id' | 'status' | 'color'>) => {
+    const newProject: Omit<Project, 'color'> = {
       ...projectData,
       id: `proj-${Date.now()}`,
       status: 'in-progress',
     };
-    setProjects(prev => [...prev, newProject]);
+    setInternalProjects(prev => [...prev, newProject]);
     toast({
       title: "プロジェクトが追加されました",
       description: newProject.name,
     })
   }, [toast]);
 
-  const updateProject = useCallback((projectId: string, updatedData: Partial<Project>) => {
-    setProjects(prev =>
+  const updateProject = useCallback((projectId: string, updatedData: Partial<Omit<Project, 'color'>>) => {
+    setInternalProjects(prev =>
       prev.map(p => (p.id === projectId ? { ...p, ...updatedData } : p))
     );
      toast({
@@ -45,50 +79,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
   const updateTask = useCallback((projectId: string, taskId: string, updatedData: Partial<Task>) => {
-    setProjects(prev =>
+    let projectForToast: Omit<Project, 'color'> | undefined;
+    
+    setInternalProjects(prev =>
       prev.map(p => {
         if (p.id === projectId) {
+          projectForToast = p;
           const updatedTasks = p.tasks.map(t =>
             t.id === taskId ? { ...t, ...updatedData } : t
           );
           
-          // Allow manual status change back to in-progress, so only auto-complete.
           const allTasksCompleted = updatedTasks.every(t => t.completed);
-          const newStatus = allTasksCompleted && updatedTasks.length > 0 ? 'completed' : p.status;
           
-          // If the project is being completed, but the user manually set it to in-progress, respect that.
-          const finalStatus = p.status === 'in-progress' && newStatus === 'completed' ? 'completed' : p.status;
-
+          let newStatus = p.status;
+          if (allTasksCompleted && updatedTasks.length > 0 && p.status !== 'completed') {
+            newStatus = 'completed';
+          }
+          
           return {
             ...p,
             tasks: updatedTasks,
-            status: finalStatus,
+            status: newStatus,
           };
         }
         return p;
       })
     );
-    if(updatedData.completed !== undefined) {
-         toast({
-            title: updatedData.completed ? "タスク完了" : "タスクを未完了に戻しました",
+
+    const updatedProject = projects.find(p => p.id === projectId);
+
+    if (updatedData.completed !== undefined) {
+      toast({
+          title: updatedData.completed ? "タスク完了" : "タスクを未完了に戻しました",
+          description: `${updatedProject?.name} - ${updatedData.name ?? ''}`
+      });
+    } else if (updatedData.dueDate) {
+        toast({
+            title: "タスクの期日が変更されました",
         });
     } else {
         toast({
             title: "タスクが更新されました",
         });
     }
-  }, [toast]);
+    
+    if (projectForToast && projectForToast.status === 'in-progress' && updatedProject?.status === 'completed') {
+        toast({
+            title: "プロジェクトが完了しました",
+            description: updatedProject.name,
+            variant: "default",
+        });
+    }
+  }, [projects, toast]);
 
   const getTasksForDate = useCallback((date: string): { project: Project; task: Task }[] => {
-    return projects.flatMap(project => 
-        project.tasks
-            .filter(task => task.dueDate === date)
-            .map(task => ({project, task}))
+    return projects
+        .filter(p => p.status === 'in-progress')
+        .flatMap(project => 
+            project.tasks
+                .filter(task => task.dueDate === date)
+                .map(task => ({project, task}))
     );
   }, [projects]);
 
   const getDeadlinesForDate = useCallback((date: string): Project[] => {
-    return projects.filter(project => project.deadline === date);
+    return projects.filter(project => project.deadline === date && project.status === 'in-progress');
   }, [projects]);
 
 

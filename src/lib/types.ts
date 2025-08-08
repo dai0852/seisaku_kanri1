@@ -30,4 +30,5 @@ export interface Project {
   designer: string;
   status: 'in-progress' | 'completed';
   tasks: Task[];
+  color: string;
 }

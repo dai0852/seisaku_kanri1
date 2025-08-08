@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useAppContext } from "@/context/app-context"
 import type { Project, Task } from "@/lib/types"
 import { CalendarBase } from "./calendar-base"
@@ -8,6 +8,7 @@ import { Checkbox } from "./ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog"
 import { format, parseISO } from "date-fns"
 import { ja } from "date-fns/locale"
+import { ProjectLegend } from "./project-legend"
 
 interface TaskItem {
     project: Project;
@@ -34,12 +35,16 @@ export function MonthlyScheduleTab() {
   const renderTask = (item: TaskItem) => {
     const { project, task } = item;
     return (
-      <div className="flex items-start gap-2 p-1.5 rounded-md bg-background border shadow-sm cursor-grab active:cursor-grabbing">
+      <div 
+        className="flex items-start gap-2 p-1.5 rounded-md bg-background border-l-4 shadow-sm cursor-grab active:cursor-grabbing"
+        style={{ borderLeftColor: project.color }}
+      >
         <Checkbox
             id={`cal-task-${task.id}`}
             checked={task.completed}
             onCheckedChange={(checked) => updateTask(project.id, task.id, { completed: !!checked })}
             className="mt-0.5"
+            style={{ color: project.color }}
         />
         <div>
             <p className="font-medium leading-tight">{task.name}</p>
@@ -49,15 +54,25 @@ export function MonthlyScheduleTab() {
     );
   };
 
+  const inProgressProjects = useMemo(() => {
+    return projects.filter(p => p.status === 'in-progress');
+  }, [projects]);
+
+
   return (
-    <div>
-      <CalendarBase
-        getItemsForDate={getTasksForDate}
-        renderItem={renderTask}
-        onItemDrop={handleTaskDrop}
-        onDateClick={handleDateClick}
-        itemType="task"
-      />
+    <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex-grow">
+        <CalendarBase
+          getItemsForDate={getTasksForDate}
+          renderItem={renderTask}
+          onItemDrop={handleTaskDrop}
+          onDateClick={handleDateClick}
+          itemType="task"
+        />
+      </div>
+       <div className="w-full md:w-64">
+        <ProjectLegend projects={inProgressProjects} />
+      </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -71,7 +86,7 @@ export function MonthlyScheduleTab() {
           <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-3 mt-4">
             {tasksForSelectedDate.length > 0 ? (
                 tasksForSelectedDate.map(({project, task}) => (
-                    <div key={task.id} className="flex items-start gap-3 rounded-md border bg-muted/50 p-4">
+                    <div key={task.id} className="flex items-start gap-3 rounded-md border-l-4 bg-muted/50 p-4" style={{borderLeftColor: project.color}}>
                          <Checkbox 
                             id={`dialog-task-${task.id}`}
                             checked={task.completed}
@@ -80,7 +95,7 @@ export function MonthlyScheduleTab() {
                         />
                         <div className="grid gap-0.5 w-full">
                             <label htmlFor={`dialog-task-${task.id}`} className="font-medium text-base">{task.name}</label>
-                            <p className="text-sm text-primary font-semibold">{project.name}</p>
+                            <p className="text-sm font-semibold" style={{color: project.color}}>{project.name}</p>
                             {task.notes && <p className="text-sm text-muted-foreground mt-1">{task.notes}</p>}
                         </div>
                     </div>
