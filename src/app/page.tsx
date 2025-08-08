@@ -1,10 +1,13 @@
 import { AppProvider } from '@/context/app-context';
+import { AuthProvider } from '@/context/auth-context';
 import { MainContent } from '@/components/main-content';
 
 export default function Home() {
   return (
-    <AppProvider>
-      <MainContent />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <MainContent />
+      </AppProvider>
+    </AuthProvider>
   );
 }
