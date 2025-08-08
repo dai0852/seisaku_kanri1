@@ -1,3 +1,10 @@
+import { AppProvider } from '@/context/app-context';
+import { MainContent } from '@/components/main-content';
+
 export default function Home() {
-  return <></>;
+  return (
+    <AppProvider>
+      <MainContent />
+    </AppProvider>
+  );
 }
