@@ -11,14 +11,16 @@ import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog"
 import { Progress } from "./ui/progress"
-import type { Project } from "@/lib/types"
+import type { Project, Task } from "@/lib/types"
 import { EditProjectDialog } from "./edit-project-dialog"
 import { compareAsc, parseISO } from "date-fns"
+import { EditTaskDialog } from "./edit-task-dialog"
 
 const ProjectCard = ({ project }: { project: Project }) => {
     const { updateTask, deleteProject } = useAppContext()
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
     const progress = useMemo(() => {
         if (project.tasks.length === 0) return 0;
@@ -29,6 +31,10 @@ const ProjectCard = ({ project }: { project: Project }) => {
     const sortedTasks = useMemo(() => {
       return [...project.tasks].sort((a, b) => compareAsc(parseISO(a.dueDate), parseISO(b.dueDate)));
     }, [project.tasks]);
+
+    const handleEditTask = (task: Task) => {
+        setTaskToEdit(task);
+    }
 
     return (
         <>
@@ -78,7 +84,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
                             <h4 className="font-semibold mb-2 text-sm">工程タスク</h4>
                             <div className="space-y-2">
                                 {sortedTasks.length > 0 ? sortedTasks.map(task => (
-                                    <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3">
+                                    <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3 group/task">
                                         <Checkbox 
                                             id={`task-${task.id}`}
                                             checked={task.completed}
@@ -93,6 +99,15 @@ const ProjectCard = ({ project }: { project: Project }) => {
                                             <p className="text-sm text-muted-foreground">期限: {task.dueDate}</p>
                                             {task.notes && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{task.notes}</p>}
                                         </div>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-7 w-7 self-center opacity-0 group-hover/task:opacity-100 transition-opacity"
+                                            onClick={() => handleEditTask(task)}
+                                            disabled={task.name === '納品'}
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 )) : <p className="text-sm text-muted-foreground">このプロジェクトにはタスクがありません。</p>}
                             </div>
@@ -115,6 +130,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
                 </AlertDialog>
             </AccordionItem>
             {isEditDialogOpen && <EditProjectDialog project={project} open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} />}
+            {taskToEdit && <EditTaskDialog project={project} task={taskToEdit} open={!!taskToEdit} onOpenChange={(open) => !open && setTaskToEdit(null)} />}
         </>
     )
 }
