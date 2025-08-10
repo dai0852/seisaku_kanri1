@@ -1,4 +1,4 @@
-# Seisaku Manager
+# 制作工程管理マネージャー
 
 This document outlines the specifications for the Seisaku Manager application.
 

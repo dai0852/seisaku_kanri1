@@ -48,7 +48,7 @@ export default function LoginPage() {
                     <FolderKanban className="h-8 w-8 text-primary-foreground" />
                 </div>
             </div>
-          <CardTitle className="text-2xl">Seisaku Manager</CardTitle>
+          <CardTitle className="text-2xl">制作工程管理マネージャー</CardTitle>
           <CardDescription>ログインしてください</CardDescription>
         </CardHeader>
         <CardContent>

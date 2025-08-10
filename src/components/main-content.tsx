@@ -60,7 +60,7 @@ export function MainContent() {
                 <FolderKanban className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">Seisaku Manager</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">制作工程管理マネージャー</h1>
                 <p className="text-muted-foreground">生産タスクとスケジュールを管理するためのアプリケーション</p>
               </div>
             </div>

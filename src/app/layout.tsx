@@ -8,8 +8,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const sourceCodePro = Source_Code_Pro({ subsets: ['latin'], variable: '--font-source-code-pro' });
 
 export const metadata: Metadata = {
-  title: 'Seisaku Manager',
-  description: 'A project and schedule management app.',
+  title: '制作工程管理マネージャー',
+  description: '生産タスクとスケジュールを管理するためのアプリケーションです。',
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ja" suppressHydrationWarning>
       <body className={`${inter.variable} ${sourceCodePro.variable} font-body antialiased`}>
         <AuthProvider>
           {children}
