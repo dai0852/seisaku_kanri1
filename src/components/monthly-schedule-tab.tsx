@@ -14,24 +14,23 @@ import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Card, CardHeader } from "./ui/card"
-import { useDrag, useDrop } from "react-dnd"
+import { useDrag } from "react-dnd"
 
 interface TaskItem {
     project: Project;
     task: Task;
 }
 
+type DraggableItem = {
+    id: string;
+    projectId: string;
+    type: 'task';
+};
+
 const DraggableTask = ({ project, task }: TaskItem) => {
-    const { updateTask } = useAppContext();
     const [{ isDragging }, drag] = useDrag(() => ({
         type: 'task',
         item: { id: task.id, projectId: project.id, type: 'task' },
-        end: (item, monitor) => {
-            const dropResult = monitor.getDropResult<{ date: string }>();
-            if (item && dropResult) {
-                updateTask(item.projectId, item.id, { dueDate: dropResult.date });
-            }
-        },
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
@@ -75,19 +74,19 @@ export function MonthlyScheduleTab() {
   }, [selectedDate, getTasksForDate, selectedDepartment]);
 
 
-  const handleTaskDrop = (taskId: string, projectId: string | undefined, newDate: string) => {
-    if (!projectId) return;
-    updateTask(projectId, taskId, { dueDate: newDate });
-  };
+  const handleTaskDrop = useCallback((item: DraggableItem, newDate: string) => {
+    if (!item.projectId) return;
+    updateTask(item.projectId, item.id, { dueDate: newDate });
+  }, [updateTask]);
   
   const handleDateClick = (date: string) => {
     setSelectedDate(date);
     setIsDialogOpen(true);
   };
 
-  const renderTask = (item: TaskItem) => {
+  const renderTask = useCallback((item: TaskItem) => {
     return <DraggableTask key={item.task.id} project={item.project} task={item.task} />;
-  };
+  }, []);
 
   const getFilteredTasksForDate = useCallback((date: string) => {
     const tasks = getTasksForDate(date);
@@ -123,7 +122,7 @@ export function MonthlyScheduleTab() {
           renderItem={renderTask}
           onItemDrop={handleTaskDrop}
           onDateClick={handleDateClick}
-          itemType="task"
+          itemTypes={['task']}
         />
       </div>
        <div className="w-full md:w-64">

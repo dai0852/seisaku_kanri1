@@ -8,7 +8,7 @@ import { Button } from "./ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader } from "./ui/card"
 import { cn } from "@/lib/utils"
-import { useDrop, DropTargetMonitor } from "react-dnd"
+import { useDrop, type DropTargetMonitor } from "react-dnd"
 
 type DraggableItem = {
     id: string;
@@ -19,9 +19,9 @@ type DraggableItem = {
 interface CalendarBaseProps {
     renderItem: (item: any) => ReactNode;
     getItemsForDate: (date: string) => any[];
-    onItemDrop: (itemId: string, projectId: string | undefined, newDate: string) => void;
+    onItemDrop: (item: DraggableItem, newDate: string) => void;
     onDateClick?: (date: string) => void;
-    itemType: 'task' | 'deadline';
+    itemTypes: ('task' | 'deadline')[];
 }
 
 const DayCell = ({
@@ -33,24 +33,26 @@ const DayCell = ({
   onItemDrop,
   onDateClick,
   renderItem,
+  itemTypes,
 }: {
   day: Date;
   isCurrentMonth: boolean;
   isToday: boolean;
   dateStr: string;
   items: any[];
-  onItemDrop: (newDate: string) => void;
+  onItemDrop: (item: DraggableItem, newDate: string) => void;
   onDateClick?: (date: string) => void;
   renderItem: (item: any) => ReactNode;
+  itemTypes: ('task' | 'deadline')[];
 }) => {
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
-    accept: ['task', 'deadline'],
-    drop: (item: DraggableItem) => onItemDrop(dateStr),
+    accept: itemTypes,
+    drop: (item: DraggableItem) => onItemDrop(item, dateStr),
     collect: (monitor: DropTargetMonitor) => ({
       isOver: !!monitor.isOver(),
       canDrop: !!monitor.canDrop(),
     }),
-  }), [dateStr]);
+  }), [dateStr, onItemDrop]);
 
   return (
     <div
@@ -69,7 +71,7 @@ const DayCell = ({
       </time>
       <div className="flex-grow overflow-y-auto space-y-1 mt-1 text-xs">
         {items.map(item => (
-            <div key={item.id || item.task.id}>
+            <div key={item.id || item.task?.id}>
                 {renderItem(item)}
             </div>
         ))}
@@ -79,7 +81,7 @@ const DayCell = ({
 };
 
 
-export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateClick, itemType }: CalendarBaseProps) {
+export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateClick, itemTypes }: CalendarBaseProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
 
   const firstDayOfMonth = useMemo(() => startOfMonth(currentDate), [currentDate]);
@@ -88,10 +90,6 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
   const calendarDays = useMemo(() => {
     return Array.from({ length: 42 }).map((_, i) => addDays(calendarStartDate, i));
   }, [calendarStartDate]);
-
-  const handleDrop = (item: DraggableItem, newDate: string) => {
-    onItemDrop(item.id, item.projectId, newDate);
-  };
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1))
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1))
@@ -127,14 +125,10 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
                 isToday={isToday(day)}
                 dateStr={dateStr}
                 items={items}
-                onItemDrop={(newDate: string) => {
-                    // This is a bit of a hack, but useDrop's drop function doesn't give us the item directly
-                    // We need a way to get the dragged item's info.
-                    // This will be handled in the draggable item component itself using `begin` and `end` drag callbacks.
-                    // For now, this just triggers a re-render. The actual update logic is in the context.
-                }}
+                onItemDrop={onItemDrop}
                 onDateClick={onDateClick}
                 renderItem={renderItem}
+                itemTypes={itemTypes}
               />
             )
           })}
@@ -143,4 +137,3 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
     </Card>
   )
 }
-
