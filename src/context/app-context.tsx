@@ -90,10 +90,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     const projectDoc = doc(db, "projects", projectId);
     try {
-      await updateDoc(projectDoc, updatedData);
+      // Ensure tasks are part of the update if they exist in updatedData
+      const dataToUpdate: Partial<Project> = { ...updatedData };
+      if (updatedData.tasks) {
+        dataToUpdate.tasks = updatedData.tasks;
+      }
+
+      await updateDoc(projectDoc, dataToUpdate);
       toast({
         title: "プロジェクトが更新されました",
-        description: updatedData.status ? `ステータスを「${updatedData.status === 'completed' ? '完了' : '進行中'}」に変更しました。` : "プロジェクト情報が更新されました。",
+        description: "プロジェクト情報が正常に更新されました。",
       });
     } catch (error) {
       console.error("Error updating project: ", error);
@@ -141,6 +147,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const deliveryTask = updatedTasks.find(t => t.name === '納品');
     if (deliveryTask?.completed && project.status !== 'completed') {
       newStatus = 'completed';
+    } else if (!deliveryTask?.completed && project.status === 'completed') {
+      newStatus = 'in-progress';
     }
     
     const projectDoc = doc(db, "projects", projectId);
@@ -158,10 +166,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } else if (updatedData.dueDate) {
         toast({
           title: "タスクの期日が変更されました",
-        });
-      } else {
-        toast({
-          title: "タスクが更新されました",
         });
       }
 
@@ -219,6 +223,5 @@ export function useAppContext(): AppContextType {
   if (context === undefined) {
     throw new Error('useAppContext must be used within an AppProvider');
   }
-  // This is a temporary solution to satisfy the type checker where we haven't implemented all methods.
   return context as AppContextType;
 }
