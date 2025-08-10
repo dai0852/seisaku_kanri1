@@ -42,7 +42,7 @@ const DraggableTask = ({ project, task }: TaskItem) => {
                 className={cn(
                 "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
                 task.completed && "line-through",
-                task.name === '納品' && "border-2 border-dotted"
+                task.name === '納品' && "border-4 border-double"
                 )}
                 style={{ backgroundColor: project.color, borderColor: project.color }}
             >
