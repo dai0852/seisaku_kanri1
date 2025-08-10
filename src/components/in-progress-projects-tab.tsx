@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Progress } from "./ui/progress"
 import type { Project } from "@/lib/types"
 import { EditProjectDialog } from "./edit-project-dialog"
+import { compareAsc, parseISO } from "date-fns"
 
 const ProjectCard = ({ project }: { project: Project }) => {
     const { updateTask, deleteProject } = useAppContext()
@@ -23,6 +24,10 @@ const ProjectCard = ({ project }: { project: Project }) => {
         if (project.tasks.length === 0) return 0;
         const completedTasks = project.tasks.filter(t => t.completed).length;
         return (completedTasks / project.tasks.length) * 100;
+    }, [project.tasks]);
+
+    const sortedTasks = useMemo(() => {
+      return [...project.tasks].sort((a, b) => compareAsc(parseISO(a.dueDate), parseISO(b.dueDate)));
     }, [project.tasks]);
 
     return (
@@ -72,7 +77,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
                         <div className="px-4 pb-4 pt-0">
                             <h4 className="font-semibold mb-2 text-sm">工程タスク</h4>
                             <div className="space-y-2">
-                                {project.tasks.length > 0 ? project.tasks.map(task => (
+                                {sortedTasks.length > 0 ? sortedTasks.map(task => (
                                     <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3">
                                         <Checkbox 
                                             id={`task-${task.id}`}

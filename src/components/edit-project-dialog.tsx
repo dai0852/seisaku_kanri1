@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +19,7 @@ import { useAppContext } from "@/context/app-context";
 import { CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { cn } from "@/lib/utils";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, compareAsc } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Calendar } from "./ui/calendar";
 import { DEPARTMENTS, Department, type Project } from "@/lib/types";
@@ -67,6 +67,12 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
     resolver: zodResolver(projectSchema),
   });
 
+  const sortedTasks = useMemo(() => {
+    if (!project) return [];
+    return [...project.tasks].sort((a, b) => compareAsc(parseISO(a.dueDate), parseISO(b.dueDate)));
+  }, [project]);
+
+
   useEffect(() => {
     if (project) {
         reset({
@@ -74,7 +80,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
             deadline: parseISO(project.deadline),
             salesRep: project.salesRep,
             designer: project.designer,
-            tasks: project.tasks
+            tasks: sortedTasks
                 .filter(t => t.name !== '納品') // Exclude delivery task from editable tasks
                 .map(task => ({
                     ...task,
@@ -82,7 +88,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                 })),
         });
     }
-  }, [project, reset]);
+  }, [project, reset, sortedTasks]);
 
 
   const { fields, append, remove } = useFieldArray({
@@ -123,11 +129,13 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
             completed: false
         });
     }
+
+    const sortedFormattedTasks = [...formattedTasks].sort((a, b) => compareAsc(parseISO(a.dueDate), parseISO(b.dueDate)));
     
     updateProject(project.id, {
         ...data,
         deadline: format(data.deadline, "yyyy-MM-dd"),
-        tasks: formattedTasks,
+        tasks: sortedFormattedTasks,
     });
     onOpenChange(false);
   };
@@ -276,7 +284,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                     onClick={() => append({ id: `new-task-${Date.now()}`, name: "", department: "営業", dueDate: new Date(), notes: "", completed: false })}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    タスクを追加
+                    工程タスクを追加
                   </Button>
                 </div>
               </div>
