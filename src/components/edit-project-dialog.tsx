@@ -160,7 +160,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="deadline">納期</Label>
-                  <Popover>
+                  <Popover modal={true}>
                     <PopoverTrigger asChild>
                       <Button
                         variant={"outline"}
@@ -245,7 +245,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                           control={control}
                           name={`tasks.${index}.dueDate`}
                           render={({ field }) => (
-                            <Popover>
+                            <Popover modal={true}>
                                 <PopoverTrigger asChild>
                                     <Button
                                     variant={"outline"}

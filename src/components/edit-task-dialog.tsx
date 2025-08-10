@@ -125,7 +125,7 @@ export function EditTaskDialog({ project, task, open, onOpenChange }: EditTaskDi
                     control={control}
                     name="dueDate"
                     render={({ field }) => (
-                    <Popover>
+                    <Popover modal={true}>
                         <PopoverTrigger asChild>
                             <Button
                             variant={"outline"}

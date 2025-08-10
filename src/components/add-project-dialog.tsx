@@ -120,7 +120,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="deadline">納期</Label>
-                  <Popover>
+                  <Popover modal={true}>
                     <PopoverTrigger asChild>
                       <Button
                         variant={"outline"}
@@ -187,7 +187,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                       </div>
                       <div className="col-span-6">
                         <Label>期日</Label>
-                        <Popover>
+                        <Popover modal={true}>
                             <PopoverTrigger asChild>
                                 <Button
                                 variant={"outline"}
