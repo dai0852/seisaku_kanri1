@@ -14,11 +14,44 @@ import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Card, CardHeader } from "./ui/card"
+import { useDrag, useDrop } from "react-dnd"
 
 interface TaskItem {
     project: Project;
     task: Task;
 }
+
+const DraggableTask = ({ project, task }: TaskItem) => {
+    const { updateTask } = useAppContext();
+    const [{ isDragging }, drag] = useDrag(() => ({
+        type: 'task',
+        item: { id: task.id, projectId: project.id, type: 'task' },
+        end: (item, monitor) => {
+            const dropResult = monitor.getDropResult<{ date: string }>();
+            if (item && dropResult) {
+                updateTask(item.projectId, item.id, { dueDate: dropResult.date });
+            }
+        },
+        collect: (monitor) => ({
+            isDragging: !!monitor.isDragging(),
+        }),
+    }), [project.id, task.id]);
+    
+    return (
+        <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
+            <Badge
+                className={cn(
+                "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
+                task.completed && "line-through"
+                )}
+                style={{ backgroundColor: project.color }}
+            >
+                {task.name}
+            </Badge>
+        </div>
+    );
+};
+
 
 export function MonthlyScheduleTab() {
   const { projects, updateTask, getTasksForDate } = useAppContext()
@@ -53,18 +86,7 @@ export function MonthlyScheduleTab() {
   };
 
   const renderTask = (item: TaskItem) => {
-    const { project, task } = item;
-    return (
-      <Badge
-        className={cn(
-          "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
-          task.completed && "line-through"
-        )}
-        style={{ backgroundColor: project.color }}
-      >
-        {task.name}
-      </Badge>
-    );
+    return <DraggableTask key={item.task.id} project={item.project} task={item.task} />;
   };
 
   const getFilteredTasksForDate = useCallback((date: string) => {
