@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo, type ReactNode } from "react"
@@ -36,6 +37,11 @@ export function CalendarBase({ getItemsForDate, renderItem, onItemDrop, onDateCl
 
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: any) => {
+    // Prevent drag on touch devices to allow date click
+    if ('ontouchstart' in window) {
+      e.preventDefault();
+      return;
+    }
     const draggable: DraggableItem = itemType === 'task' 
         ? { id: item.task.id, projectId: item.project.id, type: 'task' }
         : { id: item.id, type: 'deadline' };
