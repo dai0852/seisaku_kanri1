@@ -284,7 +284,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                     onClick={() => append({ id: `new-task-${Date.now()}`, name: "", department: "営業", dueDate: new Date(), notes: "", completed: false })}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    工程タスクを追加
+                    工程タスクを編集
                   </Button>
                 </div>
               </div>
