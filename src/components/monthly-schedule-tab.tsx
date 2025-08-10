@@ -13,7 +13,7 @@ import { ProjectLegend } from "./project-legend"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { Card, CardHeader } from "./ui/card"
+import { Card, CardContent, CardHeader } from "./ui/card"
 import { useDrag } from "react-dnd"
 
 interface TaskItem {
@@ -57,21 +57,44 @@ export function MonthlyScheduleTab() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedDepartment, setSelectedDepartment] = useState<Department | 'all'>('all')
+  const [selectedProjectId, setSelectedProjectId] = useState<string | 'all'>('all')
 
   const inProgressProjects = useMemo(() => {
-    return projects.filter(p => p.status === 'in-progress');
+    return projects.filter(p => p.status === 'in-progress').sort((a, b) => a.name.localeCompare(b.name));
   }, [projects]);
+  
+  const getFilteredTasksForDate = useCallback((date: string) => {
+    let tasks = getTasksForDate(date);
+    let inProgressTasks = tasks.filter(item => item.project.status === 'in-progress');
+    
+    if (selectedDepartment !== 'all') {
+      inProgressTasks = inProgressTasks.filter(item => item.task.department === selectedDepartment);
+    }
+    if (selectedProjectId !== 'all') {
+      inProgressTasks = inProgressTasks.filter(item => item.project.id === selectedProjectId);
+    }
+    return inProgressTasks;
+  }, [getTasksForDate, selectedDepartment, selectedProjectId]);
   
   const tasksForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
-    const allTasks = getTasksForDate(selectedDate);
-    const filteredByProjectStatus = allTasks.filter(item => item.project.status === 'in-progress');
+    return getFilteredTasksForDate(selectedDate);
+  }, [selectedDate, getFilteredTasksForDate]);
 
-    if (selectedDepartment === 'all') {
-        return filteredByProjectStatus;
-    }
-    return filteredByProjectStatus.filter(item => item.task.department === selectedDepartment);
-  }, [selectedDate, getTasksForDate, selectedDepartment]);
+  const projectsInCalendar = useMemo(() => {
+    const projectIds = new Set<string>();
+    inProgressProjects.forEach(p => {
+        if (selectedProjectId !== 'all' && p.id !== selectedProjectId) return;
+        p.tasks.forEach(t => {
+            if (selectedDepartment === 'all' || t.department === selectedDepartment) {
+                projectIds.add(p.id);
+            }
+        });
+    });
+    return inProgressProjects
+      .filter(p => projectIds.has(p.id))
+      .sort((a,b) => a.name.localeCompare(b.name));
+  }, [inProgressProjects, selectedDepartment, selectedProjectId]);
 
 
   const handleTaskDrop = useCallback((item: DraggableItem, newDate: string) => {
@@ -88,25 +111,15 @@ export function MonthlyScheduleTab() {
     return <DraggableTask key={item.task.id} project={item.project} task={item.task} />;
   }, []);
 
-  const getFilteredTasksForDate = useCallback((date: string) => {
-    const tasks = getTasksForDate(date);
-    const inProgressTasks = tasks.filter(item => item.project.status === 'in-progress');
-    if (selectedDepartment === 'all') {
-      return inProgressTasks;
-    }
-    return inProgressTasks.filter(item => item.task.department === selectedDepartment);
-  }, [getTasksForDate, selectedDepartment]);
-
-
   return (
     <div className="flex flex-col md:flex-row gap-6">
       <div className="flex-grow space-y-4">
         <Card>
-            <CardHeader>
-                <div className="flex items-center gap-4">
+            <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium">担当部署で絞り込み</h3>
                     <Select value={selectedDepartment} onValueChange={(value) => setSelectedDepartment(value as Department | 'all')}>
-                        <SelectTrigger className="w-[200px]">
+                        <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="部署を選択" />
                         </SelectTrigger>
                         <SelectContent>
@@ -115,7 +128,19 @@ export function MonthlyScheduleTab() {
                         </SelectContent>
                     </Select>
                 </div>
-            </CardHeader>
+                 <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium">プロジェクトで絞り込み</h3>
+                    <Select value={selectedProjectId} onValueChange={(value) => setSelectedProjectId(value as string | 'all')}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="プロジェクトを選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">すべてのプロジェクト</SelectItem>
+                            {inProgressProjects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </CardContent>
         </Card>
         <CalendarBase
           getItemsForDate={getFilteredTasksForDate}
@@ -126,7 +151,7 @@ export function MonthlyScheduleTab() {
         />
       </div>
        <div className="w-full md:w-64">
-        <ProjectLegend projects={inProgressProjects} />
+        <ProjectLegend projects={projectsInCalendar} />
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
