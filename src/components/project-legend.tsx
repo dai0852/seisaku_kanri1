@@ -11,7 +11,7 @@ export function ProjectLegend({ projects }: ProjectLegendProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>凡例</CardTitle>
+                <CardTitle>プロジェクト名</CardTitle>
             </CardHeader>
             <CardContent>
                 <ul className="space-y-2">
