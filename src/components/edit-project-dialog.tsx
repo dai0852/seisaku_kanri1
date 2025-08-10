@@ -107,7 +107,21 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
         if(originalDeliveryTask.dueDate !== deliveryTaskDueDate) {
             originalDeliveryTask.dueDate = deliveryTaskDueDate;
         }
-        formattedTasks.push(originalDeliveryTask);
+        // Make sure to preserve completion status of the delivery task
+        formattedTasks.push({
+            ...originalDeliveryTask,
+            dueDate: deliveryTaskDueDate
+        });
+    } else {
+        // If for some reason there was no delivery task, create one.
+         formattedTasks.push({
+            id: `task-${Date.now()}-delivery`,
+            name: "納品",
+            department: "配送課" as Department,
+            dueDate: format(data.deadline, "yyyy-MM-dd"),
+            notes: "",
+            completed: false
+        });
     }
     
     updateProject(project.id, {
@@ -184,9 +198,10 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                           control={control}
                           name={`tasks.${index}.completed`}
                           render={({ field: { onChange, value } }) => (
-                            <input type="hidden" onChange={onChange} value={value.toString()} />
+                            <input type="hidden" {...register(`tasks.${index}.completed`)} />
                           )}
                         />
+                         <input type="hidden" {...register(`tasks.${index}.id`)} />
                       <div className="col-span-12">
                         <Label>タスク名</Label>
                         <Input {...register(`tasks.${index}.name`)} />
@@ -198,7 +213,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                             control={control}
                             name={`tasks.${index}.department`}
                             render={({ field }) => (
-                                <Select onValueChange={(value) => field.onChange(value as Department)} defaultValue={field.value}>
+                                <Select onValueChange={(value) => field.onChange(value as Department)} value={field.value}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="部署を選択" />
                                     </SelectTrigger>
@@ -212,26 +227,32 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                       </div>
                       <div className="col-span-6">
                         <Label>期日</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant={"outline"}
-                                className={cn("w-full justify-start text-left font-normal", !watch(`tasks.${index}.dueDate`) && "text-muted-foreground")}
-                                >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {watch(`tasks.${index}.dueDate`) ? format(watch(`tasks.${index}.dueDate`), "PPP", { locale: ja }) : <span>日付を選択</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                mode="single"
-                                selected={watch(`tasks.${index}.dueDate`)}
-                                onSelect={(date) => setValue(`tasks.${index}.dueDate`, date as Date, { shouldDirty: true })}
-                                initialFocus
-                                locale={ja}
-                                />
-                            </PopoverContent>
-                        </Popover>
+                        <Controller
+                          control={control}
+                          name={`tasks.${index}.dueDate`}
+                          render={({ field }) => (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                    variant={"outline"}
+                                    className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}
+                                    >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value ? format(field.value, "PPP", { locale: ja }) : <span>日付を選択</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={(date) => field.onChange(date)}
+                                    initialFocus
+                                    locale={ja}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                          )}
+                        />
                         {errors.tasks?.[index]?.dueDate && <p className="text-sm text-destructive">{errors.tasks[index]?.dueDate?.message}</p>}
                       </div>
                        <div className="col-span-12">
