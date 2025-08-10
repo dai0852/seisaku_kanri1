@@ -197,11 +197,17 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                        <Controller
                           control={control}
                           name={`tasks.${index}.completed`}
-                          render={({ field: { onChange, value } }) => (
-                            <input type="hidden" {...register(`tasks.${index}.completed`)} />
+                          render={({ field: { value } }) => (
+                            <input type="hidden" {...register(`tasks.${index}.completed`)} value={value.toString()} />
                           )}
                         />
-                         <input type="hidden" {...register(`tasks.${index}.id`)} />
+                         <Controller
+                            control={control}
+                            name={`tasks.${index}.id`}
+                            render={({ field: { value } }) => (
+                                <input type="hidden" {...register(`tasks.${index}.id`)} value={value} />
+                            )}
+                        />
                       <div className="col-span-12">
                         <Label>タスク名</Label>
                         <Input {...register(`tasks.${index}.name`)} />
