@@ -139,21 +139,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const project = internalProjects.find(p => p.id === projectId);
     if (!project) return;
 
+    const taskToUpdate = project.tasks.find(t => t.id === taskId);
     const updatedTasks = project.tasks.map(t => 
       t.id === taskId ? { ...t, ...updatedData } : t
     );
     
-    let newStatus = project.status;
+    const updates: Partial<Project> = {
+      tasks: updatedTasks,
+    };
+
+    // If '納品' task date is changed, update project deadline
+    if (taskToUpdate?.name === '納品' && updatedData.dueDate) {
+        updates.deadline = updatedData.dueDate;
+    }
+
+    // Handle project status change based on '納品' task completion
     const deliveryTask = updatedTasks.find(t => t.name === '納品');
     if (deliveryTask?.completed && project.status !== 'completed') {
-      newStatus = 'completed';
-    } else if (!deliveryTask?.completed && project.status === 'completed') {
-      newStatus = 'in-progress';
+      updates.status = 'completed';
+    } else if (deliveryTask && !deliveryTask.completed && project.status === 'completed') {
+      updates.status = 'in-progress';
     }
     
     const projectDoc = doc(db, "projects", projectId);
     try {
-      await updateDoc(projectDoc, { tasks: updatedTasks, status: newStatus });
+      await updateDoc(projectDoc, updates);
       
       const updatedProject = projects.find(p => p.id === projectId);
       const updatedTask = updatedProject?.tasks.find(t => t.id === taskId);
@@ -169,7 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      if (project.status !== 'completed' && newStatus === 'completed') {
+      if (project.status !== 'completed' && updates.status === 'completed') {
         toast({
             title: "プロジェクトが完了しました",
             description: project.name,
