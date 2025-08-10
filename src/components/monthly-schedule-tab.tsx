@@ -13,7 +13,7 @@ import { ProjectLegend } from "./project-legend"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { Card, CardContent, CardHeader } from "./ui/card"
+import { Card, CardContent } from "./ui/card"
 import { useDrag } from "react-dnd"
 
 interface TaskItem {
@@ -42,9 +42,9 @@ const DraggableTask = ({ project, task }: TaskItem) => {
                 className={cn(
                 "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
                 task.completed && "line-through",
-                task.name === '納品' && "rounded-md"
+                task.name === '納品' && "border-2 border-dashed"
                 )}
-                style={{ backgroundColor: project.color }}
+                style={{ backgroundColor: project.color, borderColor: project.color }}
             >
                 {task.name}
             </Badge>
