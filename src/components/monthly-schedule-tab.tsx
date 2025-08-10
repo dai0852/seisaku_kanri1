@@ -41,7 +41,8 @@ const DraggableTask = ({ project, task }: TaskItem) => {
             <Badge
                 className={cn(
                 "w-full justify-start truncate cursor-grab active:cursor-grabbing text-white",
-                task.completed && "line-through"
+                task.completed && "line-through",
+                task.name === '納品' && "rounded-md"
                 )}
                 style={{ backgroundColor: project.color }}
             >
