@@ -18,36 +18,43 @@ export function OverallManagementTab() {
     return projects.filter(p => p.status === 'in-progress');
   }, [projects]);
 
+  const escapeCSV = (value: any) => {
+    const strValue = String(value ?? ''); // Handle null/undefined
+    if (/[",\n]/.test(strValue)) {
+      return `"${strValue.replace(/"/g, '""')}"`;
+    }
+    return strValue;
+  };
+
   const convertToCSV = (projects: Project[]) => {
     const header = [
-      "ID", "物件名", "納期", "担当営業", "担当デザイナー", 
-      "リンク", "備考", "ステータス", "タスク数", "完了タスク数", "進捗率(%)"
+      "プロジェクトID", "物件名", "納期", "担当営業", "担当デザイナー", 
+      "リンク", "プロジェクト備考", "ステータス", 
+      "タスクID", "タスク名", "タスク担当部署", "タスク期日", "タスク完了状況", "タスク備考"
     ];
-    const rows = projects.map(p => {
-      const completedTasks = p.tasks.filter(t => t.completed).length;
-      const progress = p.tasks.length > 0 ? (completedTasks / p.tasks.length) * 100 : 0;
-      const row = [
-        p.id,
-        p.name,
-        p.deadline,
-        p.salesRep,
-        p.designer,
-        p.link || '',
-        (p.notes || '').replace(/"/g, '""'), // Escape double quotes in notes
-        p.status,
-        p.tasks.length,
-        completedTasks,
-        Math.round(progress)
-      ].map(value => {
-        const strValue = String(value);
-        // Escape double quotes by doubling them and wrap in double quotes if it contains comma, double quote or newline
-        if (/[",\n]/.test(strValue)) {
-          return `"${strValue.replace(/"/g, '""')}"`;
+
+    const rows = projects.flatMap(p => {
+        if (p.tasks && p.tasks.length > 0) {
+            return p.tasks.map(t => {
+                const projectRow = [
+                    p.id, p.name, p.deadline, p.salesRep, p.designer,
+                    p.link, p.notes, p.status
+                ];
+                const taskRow = [
+                    t.id, t.name, t.department, t.dueDate, t.completed ? '完了' : '未完了', t.notes
+                ];
+                return [...projectRow, ...taskRow].map(escapeCSV).join(',');
+            });
         }
-        return strValue;
-      });
-      return row.join(',');
+        // If a project has no tasks, create one row for it with empty task fields.
+        const projectRow = [
+            p.id, p.name, p.deadline, p.salesRep, p.designer,
+            p.link, p.notes, p.status,
+            "", "", "", "", "", ""
+        ];
+        return [projectRow.map(escapeCSV).join(',')];
     });
+
     return [header.join(','), ...rows].join('\n');
   };
 
@@ -59,7 +66,7 @@ export function OverallManagementTab() {
     link.setAttribute("href", url);
     const now = new Date();
     const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
-    link.setAttribute("download", `all_projects_${timestamp}.csv`);
+    link.setAttribute("download", `all_projects_with_tasks_${timestamp}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
