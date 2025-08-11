@@ -12,38 +12,32 @@ interface FirebaseInstances {
 let instances: FirebaseInstances | null = null;
 
 function initializeFirebase(): FirebaseInstances {
+    if (typeof window === "undefined") {
+        // This should not happen in a well-configured client-side app,
+        // but as a safeguard, we prevent server-side execution without config.
+        throw new Error("Firebase cannot be initialized on the server without configuration.");
+    }
+    
     let app: FirebaseApp;
 
     if (getApps().length) {
         app = getApp();
     } else {
-        // For local development, use client-side environment variables from .env.local
-        if (process.env.NODE_ENV === 'development') {
-            const firebaseConfig = {
-                apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-                authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-                messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-                appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-            };
-            if (!firebaseConfig.apiKey) {
-                throw new Error('Firebase config is not set for local development. Please check your .env.local file.');
-            }
-            app = initializeApp(firebaseConfig);
+        // For production (Firebase App Hosting), Firebase provides config via reserved env vars.
+        // These are substituted at build time, so they are available on the client.
+        const firebaseConfig = {
+            apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+            authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+            appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        };
+
+        if (!firebaseConfig.apiKey) {
+            throw new Error('Firebase config is not set. Please check your environment variables.');
         }
-        // For production (Firebase App Hosting), use server-side config
-        else if (process.env.FIREBASE_WEBAPP_CONFIG) {
-            try {
-                const config = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
-                app = initializeApp(config);
-            } catch (e) {
-                 throw new Error('Failed to parse FIREBASE_WEBAPP_CONFIG.');
-            }
-        }
-        else {
-             throw new Error('Firebase config is not set. Environment variables are missing.');
-        }
+        app = initializeApp(firebaseConfig);
     }
 
     const auth = getAuth(app);
