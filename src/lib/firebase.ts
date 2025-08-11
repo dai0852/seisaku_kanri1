@@ -7,10 +7,11 @@ import { getFirestore } from "firebase/firestore";
 
 let firebaseConfig;
 
+// process.env.FIREBASE_WEBAPP_CONFIG is automatically set by App Hosting at build and run time.
 if (process.env.FIREBASE_WEBAPP_CONFIG) {
   firebaseConfig = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
 } else {
-  // Your web app's Firebase configuration
+  // Fallback for local development
   firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
