@@ -29,30 +29,20 @@ export function OverallManagementTab() {
   const convertToCSV = (projects: Project[]) => {
     const header = [
       "プロジェクトID", "物件名", "納期", "担当営業", "担当デザイナー", 
-      "リンク", "プロジェクト備考", "ステータス", 
-      "タスクID", "タスク名", "タスク担当部署", "タスク期日", "タスク完了状況", "タスク備考"
+      "リンク", "プロジェクト備考", "ステータス", "工程タスク一覧"
     ];
 
-    const rows = projects.flatMap(p => {
-        if (p.tasks && p.tasks.length > 0) {
-            return p.tasks.map(t => {
-                const projectRow = [
-                    p.id, p.name, p.deadline, p.salesRep, p.designer,
-                    p.link, p.notes, p.status
-                ];
-                const taskRow = [
-                    t.id, t.name, t.department, t.dueDate, t.completed ? '完了' : '未完了', t.notes
-                ];
-                return [...projectRow, ...taskRow].map(escapeCSV).join(',');
-            });
-        }
-        // If a project has no tasks, create one row for it with empty task fields.
+    const rows = projects.map(p => {
+        const tasksString = (p.tasks || [])
+            .map((t, index) => `${index + 1}. ${t.name} (部署: ${t.department}, 期日: ${t.dueDate}, 完了: ${t.completed ? 'はい' : 'いいえ'}, 備考: ${t.notes || 'なし'})`)
+            .join('\n'); // Use newline to separate tasks within a cell
+
         const projectRow = [
             p.id, p.name, p.deadline, p.salesRep, p.designer,
             p.link, p.notes, p.status,
-            "", "", "", "", "", ""
+            tasksString
         ];
-        return [projectRow.map(escapeCSV).join(',')];
+        return projectRow.map(escapeCSV).join(',');
     });
 
     return [header.join(','), ...rows].join('\n');
