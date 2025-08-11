@@ -17,7 +17,7 @@ function initializeFirebase(): FirebaseInstances {
     if (getApps().length) {
         app = getApp();
     } else {
-        // For local development, use client-side environment variables
+        // For local development, use client-side environment variables from .env.local
         if (process.env.NODE_ENV === 'development') {
             const firebaseConfig = {
                 apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -34,11 +34,15 @@ function initializeFirebase(): FirebaseInstances {
         }
         // For production (Firebase App Hosting), use server-side config
         else if (process.env.FIREBASE_WEBAPP_CONFIG) {
-            const config = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
-            app = initializeApp(config);
+            try {
+                const config = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
+                app = initializeApp(config);
+            } catch (e) {
+                 throw new Error('Failed to parse FIREBASE_WEBAPP_CONFIG.');
+            }
         }
         else {
-             throw new Error('Firebase config is not set for production. Make sure the server environment variables are set.');
+             throw new Error('Firebase config is not set. Environment variables are missing.');
         }
     }
 
