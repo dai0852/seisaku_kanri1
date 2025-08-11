@@ -1,9 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged, User, Auth } from 'firebase/auth';
+import { doc, onSnapshot, Firestore } from 'firebase/firestore';
+import { getFirebaseInstances } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import { FullPageLoader } from '@/components/full-page-loader';
 
@@ -19,12 +19,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [approved, setApproved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [firebaseInstances, setFirebaseInstances] = useState<{ auth: Auth; db: Firestore } | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
+    getFirebaseInstances().then(setFirebaseInstances).catch(error => {
+      console.error("Firebase initialization failed:", error);
+      setLoading(false); // Stop loading if firebase fails to initialize
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!firebaseInstances) return;
+
+    const { auth } = firebaseInstances;
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      setLoading(true); // Start loading when auth state might be changing
+      setLoading(true);
       setUser(firebaseUser);
       if (!firebaseUser) {
         setApproved(false);
@@ -33,33 +44,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     
     return () => unsubscribeAuth();
-  }, []);
+  }, [firebaseInstances]);
 
   useEffect(() => {
-    let unsubscribeFirestore: (() => void) | undefined;
-    
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      unsubscribeFirestore = onSnapshot(userDocRef, (docSnap) => {
-        if (docSnap.exists() && docSnap.data().approved) {
-          setApproved(true);
-        } else {
-          setApproved(false);
-        }
+    if (!user || !firebaseInstances) {
+      if (!user) {
         setLoading(false);
-      }, (error) => {
-        console.error("Error fetching user approval status:", error);
+      }
+      return;
+    };
+
+    const { db } = firebaseInstances;
+    const userDocRef = doc(db, "users", user.uid);
+    const unsubscribeFirestore = onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists() && docSnap.data().approved) {
+        setApproved(true);
+      } else {
         setApproved(false);
-        setLoading(false);
-      });
-    }
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching user approval status:", error);
+      setApproved(false);
+      setLoading(false);
+    });
     
     return () => {
-      if (unsubscribeFirestore) {
-        unsubscribeFirestore();
-      }
+      unsubscribeFirestore();
     };
-  }, [user]);
+  }, [user, firebaseInstances]);
   
   useEffect(() => {
     if (!loading) {
@@ -73,11 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-
   const value = { user, approved, loading };
 
-  // Render a loader while waiting for auth state to resolve
-  if (loading) {
+  if (loading || !firebaseInstances) {
     return <FullPageLoader />;
   }
 

@@ -38,6 +38,7 @@ export default function SignupPage() {
     }
 
     try {
+      const { auth, db } = await getFirebaseInstances();
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,

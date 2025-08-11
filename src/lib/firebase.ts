@@ -1,41 +1,44 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp, getApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { initializeApp, getApp, getApps, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 
-let firebaseConfig;
-
-// process.env.FIREBASE_WEBAPP_CONFIG is automatically set by App Hosting at build and run time.
-if (process.env.FIREBASE_WEBAPP_CONFIG) {
-  firebaseConfig = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
-} else {
-  // Fallback for local development
-  firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-  };
+interface FirebaseInstances {
+  app: FirebaseApp;
+  auth: Auth;
+  db: Firestore;
 }
 
+let instances: FirebaseInstances | null = null;
 
-if (
-  !firebaseConfig.apiKey ||
-  !firebaseConfig.authDomain ||
-  !firebaseConfig.projectId
-) {
-  throw new Error(
-    'Firebase config is not set. Make sure to set the environment variables in .env.local'
-  );
+export async function getFirebaseInstances(): Promise<FirebaseInstances> {
+  if (instances) {
+    return instances;
+  }
+
+  let app: FirebaseApp;
+  if (getApps().length) {
+    app = getApp();
+  } else {
+    // Use server-side config in production (App Hosting)
+    if (process.env.FIREBASE_WEBAPP_CONFIG) {
+      const config = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
+      app = initializeApp(config);
+    } else {
+      // Fetch config from our API route in development
+      // Note: This fetch call is relative and will work on the client-side.
+      const res = await fetch('/api/firebase-config');
+      const config = await res.json();
+      if (config.error) {
+        console.error('Failed to load Firebase config. Make sure the server environment variables are set.');
+        throw new Error(`Failed to load Firebase config: ${config.error}`);
+      }
+      app = initializeApp(config);
+    }
+  }
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  instances = { app, auth, db };
+  return instances;
 }
-
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-export { app, auth, db };

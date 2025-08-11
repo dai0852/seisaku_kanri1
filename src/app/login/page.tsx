@@ -27,6 +27,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const { auth } = await getFirebaseInstances();
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch (error) {

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, Firestore } from "firebase/firestore";
+import { getFirebaseInstances } from "@/lib/firebase";
 import { useAuth } from "./auth-context";
 import type { Project, Task } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
@@ -38,11 +38,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [internalProjects, setInternalProjects] = useState<Omit<Project, 'color'>[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [dbInstance, setDbInstance] = useState<Firestore | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    getFirebaseInstances().then(instances => setDbInstance(instances.db)).catch(console.error);
+  }, []);
 
-    const q = query(collection(db, "projects"));
+  useEffect(() => {
+    if (!user || !dbInstance) return;
+
+    const q = query(collection(dbInstance, "projects"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const projectsData: Omit<Project, 'color'>[] = [];
       querySnapshot.forEach((doc) => {
@@ -59,18 +64,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [user, toast]);
+  }, [user, dbInstance, toast]);
 
   const projects = useMemo(() => assignColorsToProjects(internalProjects), [internalProjects]);
 
   const addProject = useCallback(async (projectData: Omit<Project, 'id' | 'status' | 'color'>) => {
-    if (!user) return;
+    if (!user || !dbInstance) return;
     try {
       const newProjectData = {
         ...projectData,
         status: 'in-progress' as const,
       };
-      const docRef = await addDoc(collection(db, "projects"), newProjectData);
+      const docRef = await addDoc(collection(dbInstance, "projects"), newProjectData);
       console.log("Project added with ID: ", docRef.id);
       toast({
         title: "プロジェクトが追加されました",
@@ -84,13 +89,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [user, toast]);
+  }, [user, dbInstance, toast]);
 
   const updateProject = useCallback(async (projectId: string, updatedData: Partial<Omit<Project, 'id'|'color'>>) => {
-    if (!user) return;
-    const projectDoc = doc(db, "projects", projectId);
+    if (!user || !dbInstance) return;
+    const projectDoc = doc(dbInstance, "projects", projectId);
     try {
-      // Ensure tasks are part of the update if they exist in updatedData
       const dataToUpdate: Partial<Project> = { ...updatedData };
       if (updatedData.tasks) {
         dataToUpdate.tasks = updatedData.tasks;
@@ -109,13 +113,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [user, toast]);
+  }, [user, dbInstance, toast]);
 
   const deleteProject = useCallback(async (projectId: string) => {
-    if (!user) return;
+    if (!user || !dbInstance) return;
     const projectToDelete = projects.find(p => p.id === projectId);
     try {
-      await deleteDoc(doc(db, "projects", projectId));
+      await deleteDoc(doc(dbInstance, "projects", projectId));
       if (projectToDelete) {
         toast({
           title: "プロジェクトが削除されました",
@@ -131,29 +135,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [user, projects, toast]);
+  }, [user, dbInstance, projects, toast]);
 
   const updateTask = useCallback(async (projectId: string, taskId: string, updatedData: Partial<Task>) => {
-    if (!user) return;
+    if (!user || !dbInstance) return;
     
     const project = internalProjects.find(p => p.id === projectId);
     if (!project) return;
 
-    const taskToUpdate = project.tasks.find(t => t.id === taskId);
     const updatedTasks = project.tasks.map(t => 
       t.id === taskId ? { ...t, ...updatedData } : t
     );
     
-    const updates: Partial<Project> = {
-      tasks: updatedTasks,
-    };
+    const updates: Partial<Project> = { tasks: updatedTasks };
 
-    // If '納品' task date is changed, update project deadline
-    if (taskToUpdate?.name === '納品' && updatedData.dueDate) {
+    if (project.tasks.find(t => t.id === taskId)?.name === '納品' && updatedData.dueDate) {
         updates.deadline = updatedData.dueDate;
     }
 
-    // Handle project status change based on '納品' task completion
     const deliveryTask = updatedTasks.find(t => t.name === '納品');
     if (deliveryTask?.completed && project.status !== 'completed') {
       updates.status = 'completed';
@@ -161,7 +160,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updates.status = 'in-progress';
     }
     
-    const projectDoc = doc(db, "projects", projectId);
+    const projectDoc = doc(dbInstance, "projects", projectId);
     try {
       await updateDoc(projectDoc, updates);
       
@@ -195,7 +194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [user, internalProjects, projects, toast]);
+  }, [user, dbInstance, internalProjects, projects, toast]);
 
   const getTasksForDate = useCallback((date: string): { project: Project; task: Task }[] => {
     return projects
@@ -211,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return projects.filter(project => project.deadline === date);
   }, [projects]);
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     projects,
     addProject,
     updateProject,
@@ -219,7 +218,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateTask,
     getTasksForDate,
     getDeadlinesForDate,
-  };
+  }), [projects, addProject, updateProject, deleteProject, updateTask, getTasksForDate, getDeadlinesForDate]);
+
+  if (!dbInstance) {
+    return null; // Or a loading spinner, but AuthProvider should handle the main loading state
+  }
 
   return (
     <AppContext.Provider value={contextValue}>
