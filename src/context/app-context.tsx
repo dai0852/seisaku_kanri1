@@ -21,7 +21,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const assignColorsToProjects = (projects: Omit<Project, 'color'>[]): Project[] => {
-    const sortedProjects = [...projects].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedProjects = [...projects].sort((a, b) => a.name.localeCompare(b.name));
     const colorMap = new Map<string, string>();
     
     sortedProjects.forEach((project, index) => {
@@ -74,6 +74,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const newProjectData = {
         ...projectData,
         status: 'in-progress' as const,
+        link: projectData.link || '',
+        notes: projectData.notes || '',
       };
       const docRef = await addDoc(collection(dbInstance, "projects"), newProjectData);
       console.log("Project added with ID: ", docRef.id);
@@ -98,6 +100,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const dataToUpdate: Partial<Project> = { ...updatedData };
       if (updatedData.tasks) {
         dataToUpdate.tasks = updatedData.tasks;
+      }
+      if ('link' in updatedData) {
+        dataToUpdate.link = updatedData.link || '';
+      }
+      if ('notes' in updatedData) {
+        dataToUpdate.notes = updatedData.notes || '';
       }
 
       await updateDoc(projectDoc, dataToUpdate);

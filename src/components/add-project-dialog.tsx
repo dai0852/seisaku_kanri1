@@ -40,6 +40,8 @@ const projectSchema = z.object({
   deadline: z.date({ required_error: "納期を選択してください" }),
   salesRep: z.string().min(1, "担当営業は必須です"),
   designer: z.string().min(1, "担当デザイナーは必須です"),
+  link: z.string().url("有効なURLを入力してください").optional().or(z.literal('')),
+  notes: z.string().optional(),
   tasks: z.array(taskSchema),
 });
 
@@ -60,6 +62,8 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
     resolver: zodResolver(projectSchema),
     defaultValues: {
       tasks: [],
+      link: "",
+      notes: "",
     },
   });
 
@@ -154,6 +158,16 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                   <Label htmlFor="designer">担当デザイナー</Label>
                   <Input id="designer" {...register("designer")} />
                   {errors.designer && <p className="text-sm text-destructive">{errors.designer.message}</p>}
+                </div>
+                 <div className="col-span-2 space-y-2">
+                  <Label htmlFor="link">リンク</Label>
+                  <Input id="link" {...register("link")} placeholder="https://example.com" />
+                  {errors.link && <p className="text-sm text-destructive">{errors.link.message}</p>}
+                </div>
+                 <div className="col-span-2 space-y-2">
+                  <Label htmlFor="notes">備考</Label>
+                  <Textarea id="notes" {...register("notes")} />
+                  {errors.notes && <p className="text-sm text-destructive">{errors.notes.message}</p>}
                 </div>
               </div>
 

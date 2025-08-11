@@ -28,6 +28,8 @@ export interface Project {
   deadline: string;
   salesRep: string;
   designer: string;
+  link?: string;
+  notes?: string;
   status: 'in-progress' | 'completed';
   tasks: Task[];
   color: string;

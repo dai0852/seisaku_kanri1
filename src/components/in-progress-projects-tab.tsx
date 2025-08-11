@@ -6,7 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "./ui/button"
-import { Pencil, Trash2 } from "lucide-react"
+import { Link, Link2, NotebookText, Pencil, Trash2 } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog"
@@ -80,36 +80,56 @@ const ProjectCard = ({ project }: { project: Project }) => {
                         </div>
                     </div>
                     <AccordionContent>
-                        <div className="px-4 pb-4 pt-0">
-                            <h4 className="font-semibold mb-2 text-sm">工程タスク</h4>
-                            <div className="space-y-2">
-                                {sortedTasks.length > 0 ? sortedTasks.map(task => (
-                                    <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3 group/task">
-                                        <Checkbox 
-                                            id={`task-${task.id}`}
-                                            checked={task.completed}
-                                            onCheckedChange={(checked) => updateTask(project.id, task.id, { completed: !!checked })}
-                                            className="mt-1"
-                                        />
-                                        <div className="grid gap-0.5 w-full">
-                                            <div className="flex items-center justify-between">
-                                                <label htmlFor={`task-${task.id}`} className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>{task.name}</label>
-                                                <Badge variant="secondary">{task.department}</Badge>
-                                            </div>
-                                            <p className="text-sm text-muted-foreground">期限: {task.dueDate}</p>
-                                            {task.notes && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{task.notes}</p>}
+                        <div className="px-4 pb-4 pt-0 space-y-4">
+                            <div>
+                                {(project.link || project.notes) && (
+                                <div className="space-y-3 mb-4">
+                                    {project.link && (
+                                        <div className="flex items-center gap-2">
+                                            <Link2 className="h-4 w-4 text-muted-foreground" />
+                                            <a href={project.link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">
+                                                {project.link}
+                                            </a>
                                         </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-7 w-7 self-center opacity-0 group-hover/task:opacity-100 transition-opacity"
-                                            onClick={() => handleEditTask(task)}
-                                            disabled={task.name === '納品'}
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                )) : <p className="text-sm text-muted-foreground">このプロジェクトにはタスクがありません。</p>}
+                                    )}
+                                    {project.notes && (
+                                        <div className="flex items-start gap-2">
+                                            <NotebookText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{project.notes}</p>
+                                        </div>
+                                    )}
+                                </div>
+                                )}
+                                <h4 className="font-semibold mb-2 text-sm">工程タスク</h4>
+                                <div className="space-y-2">
+                                    {sortedTasks.length > 0 ? sortedTasks.map(task => (
+                                        <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3 group/task">
+                                            <Checkbox 
+                                                id={`task-${task.id}`}
+                                                checked={task.completed}
+                                                onCheckedChange={(checked) => updateTask(project.id, task.id, { completed: !!checked })}
+                                                className="mt-1"
+                                            />
+                                            <div className="grid gap-0.5 w-full">
+                                                <div className="flex items-center justify-between">
+                                                    <label htmlFor={`task-${task.id}`} className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>{task.name}</label>
+                                                    <Badge variant="secondary">{task.department}</Badge>
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">期限: {task.dueDate}</p>
+                                                {task.notes && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{task.notes}</p>}
+                                            </div>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-7 w-7 self-center opacity-0 group-hover/task:opacity-100 transition-opacity"
+                                                onClick={() => handleEditTask(task)}
+                                                disabled={task.name === '納品'}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    )) : <p className="text-sm text-muted-foreground">このプロジェクトにはタスクがありません。</p>}
+                                </div>
                             </div>
                         </div>
                     </AccordionContent>
