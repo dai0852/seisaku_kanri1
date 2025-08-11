@@ -10,6 +10,7 @@ import { PROJECT_COLORS } from '@/lib/colors';
 
 interface AppContextType {
   projects: Project[];
+  allProjects: Project[];
   addProject: (project: Omit<Project, 'id' | 'status' | 'color'>) => Promise<void>;
   updateProject: (projectId: string, updatedData: Partial<Omit<Project, 'id' | 'color'>>) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
@@ -66,7 +67,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [user, dbInstance, toast]);
 
-  const projects = useMemo(() => assignColorsToProjects(internalProjects), [internalProjects]);
+  const allProjects = useMemo(() => assignColorsToProjects(internalProjects), [internalProjects]);
+  const projects = useMemo(() => allProjects.filter(p => p.status !== 'deleted'), [allProjects]);
+
 
   const addProject = useCallback(async (projectData: Omit<Project, 'id' | 'status' | 'color'>) => {
     if (!user || !dbInstance) return;
@@ -125,9 +128,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteProject = useCallback(async (projectId: string) => {
     if (!user || !dbInstance) return;
-    const projectToDelete = projects.find(p => p.id === projectId);
+    const projectToDelete = allProjects.find(p => p.id === projectId);
     try {
-      await deleteDoc(doc(dbInstance, "projects", projectId));
+      await updateDoc(doc(dbInstance, "projects", projectId), { status: 'deleted' });
       if (projectToDelete) {
         toast({
           title: "プロジェクトが削除されました",
@@ -143,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [user, dbInstance, projects, toast]);
+  }, [user, dbInstance, allProjects, toast]);
 
   const updateTask = useCallback(async (projectId: string, taskId: string, updatedData: Partial<Task>) => {
     if (!user || !dbInstance) return;
@@ -178,7 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (updatedData.completed !== undefined) {
         toast({
           title: updatedData.completed ? "タスク完了" : "タスクを未完了に戻しました",
-          description: `${updatedProject?.name} - ${updatedTask?.name ?? ''}`
+          description: `${updatedProject?.name ?? ''} - ${updatedTask?.name ?? ''}`
         });
       } else if (updatedData.dueDate) {
         toast({
@@ -220,13 +223,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const contextValue = useMemo(() => ({
     projects,
+    allProjects,
     addProject,
     updateProject,
     deleteProject,
     updateTask,
     getTasksForDate,
     getDeadlinesForDate,
-  }), [projects, addProject, updateProject, deleteProject, updateTask, getTasksForDate, getDeadlinesForDate]);
+  }), [projects, allProjects, addProject, updateProject, deleteProject, updateTask, getTasksForDate, getDeadlinesForDate]);
 
   if (!dbInstance) {
     return null; // Or a loading spinner, but AuthProvider should handle the main loading state

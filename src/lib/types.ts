@@ -30,7 +30,7 @@ export interface Project {
   designer: string;
   link?: string;
   notes?: string;
-  status: 'in-progress' | 'completed';
+  status: 'in-progress' | 'completed' | 'deleted';
   tasks: Task[];
   color: string;
 }
