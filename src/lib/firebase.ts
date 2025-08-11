@@ -23,6 +23,16 @@ if (process.env.FIREBASE_WEBAPP_CONFIG) {
 }
 
 
+if (
+  !firebaseConfig.apiKey ||
+  !firebaseConfig.authDomain ||
+  !firebaseConfig.projectId
+) {
+  throw new Error(
+    'Firebase config is not set. Make sure to set the environment variables in .env.local'
+  );
+}
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
