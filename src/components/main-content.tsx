@@ -8,7 +8,7 @@ import { OverallManagementTab } from "./overall-management-tab";
 import { Card } from "./ui/card";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
-import { auth } from "@/lib/firebase";
+import { getFirebaseInstances } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { FullPageLoader } from "./full-page-loader";
 import { AppProvider } from "@/context/app-context";
@@ -19,6 +19,7 @@ export function MainContent() {
   const router = useRouter();
 
   const handleLogout = async () => {
+    const { auth } = await getFirebaseInstances();
     await auth.signOut();
     router.push('/login');
   };
