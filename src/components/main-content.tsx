@@ -91,7 +91,7 @@ const CsvDownloadButton = () => {
     };
 
     return (
-        <Button variant="outline" onClick={handleDownloadCSV}>
+        <Button variant="destructive" onClick={handleDownloadCSV}>
             <Download className="mr-2 h-4 w-4" />
             全物件データをCSVダウンロード
         </Button>
