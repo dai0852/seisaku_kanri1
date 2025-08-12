@@ -1,3 +1,4 @@
+
 "use client";
 
 import { FolderKanban, CalendarClock, LogOut, Download } from "lucide-react";
@@ -162,7 +163,7 @@ export function MainContent() {
                 </div>
                 <Tabs defaultValue="overall" className="w-full">
                     <ScrollArea className="w-full whitespace-nowrap">
-                        <TabsList className="grid-cols-none inline-grid">
+                        <TabsList>
                         <TabsTrigger value="overall" className="py-2">
                             <FolderKanban className="mr-2 h-4 w-4" />
                             全体管理
