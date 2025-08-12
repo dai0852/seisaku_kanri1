@@ -116,7 +116,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
           </DialogHeader>
           <ScrollArea className="h-[60vh] p-4">
             <div className="grid gap-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">物件名</Label>
                   <Input id="name" {...register("name")} />
@@ -159,12 +159,12 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                   <Input id="designer" {...register("designer")} />
                   {errors.designer && <p className="text-sm text-destructive">{errors.designer.message}</p>}
                 </div>
-                 <div className="col-span-2 space-y-2">
+                 <div className="col-span-1 md:col-span-2 space-y-2">
                   <Label htmlFor="link">リンク</Label>
                   <Input id="link" {...register("link")} placeholder="https://example.com" />
                   {errors.link && <p className="text-sm text-destructive">{errors.link.message}</p>}
                 </div>
-                 <div className="col-span-2 space-y-2">
+                 <div className="col-span-1 md:col-span-2 space-y-2">
                   <Label htmlFor="notes">備考</Label>
                   <Textarea id="notes" {...register("notes")} />
                   {errors.notes && <p className="text-sm text-destructive">{errors.notes.message}</p>}
@@ -175,13 +175,13 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                 <h3 className="text-lg font-medium mb-2">工程タスク</h3>
                 <div className="space-y-4">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-12 gap-3 p-4 border rounded-md relative">
-                      <div className="col-span-12">
+                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 border rounded-md relative">
+                      <div className="col-span-1 md:col-span-12">
                         <Label>タスク名</Label>
                         <Input {...register(`tasks.${index}.name`)} />
                         {errors.tasks?.[index]?.name && <p className="text-sm text-destructive">{errors.tasks[index]?.name?.message}</p>}
                       </div>
-                      <div className="col-span-6">
+                      <div className="col-span-1 md:col-span-6">
                         <Label>担当部署</Label>
                          <Controller
                             control={control}
@@ -199,7 +199,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                         />
                         {errors.tasks?.[index]?.department && <p className="text-sm text-destructive">{errors.tasks[index]?.department?.message}</p>}
                       </div>
-                      <div className="col-span-6">
+                      <div className="col-span-1 md:col-span-6">
                         <Label>期日</Label>
                         <Popover modal={true}>
                             <PopoverTrigger asChild>
@@ -223,7 +223,7 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
                         </Popover>
                         {errors.tasks?.[index]?.dueDate && <p className="text-sm text-destructive">{errors.tasks[index]?.dueDate?.message}</p>}
                       </div>
-                       <div className="col-span-12">
+                       <div className="col-span-1 md:col-span-12">
                         <Label>備考</Label>
                         <Textarea {...register(`tasks.${index}.notes`)} />
                       </div>

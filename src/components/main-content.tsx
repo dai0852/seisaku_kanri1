@@ -15,6 +15,7 @@ import { AppProvider, useAppContext } from "@/context/app-context";
 import { DndWrapper } from "@/context/dnd-provider";
 import type { Project } from "@/lib/types";
 import { parseISO, compareAsc } from "date-fns";
+import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 
 const CsvDownloadButton = () => {
     const { allProjects } = useAppContext();
@@ -91,9 +92,9 @@ const CsvDownloadButton = () => {
     };
 
     return (
-        <Button variant="destructive" onClick={handleDownloadCSV}>
-            <Download className="mr-2 h-4 w-4" />
-            全物件データをCSVダウンロード
+        <Button variant="destructive" onClick={handleDownloadCSV} size="sm">
+            <Download className="mr-0 md:mr-2 h-4 w-4" />
+            <span className="hidden md:inline">全物件データをCSVダウンロード</span>
         </Button>
     )
 }
@@ -140,48 +141,51 @@ export function MainContent() {
     <AppProvider>
         <DndWrapper>
             <div className="flex min-h-screen w-full flex-col bg-muted/40">
-                <main className="flex-1 space-y-8 p-4 md:p-8 lg:p-10">
-                <div className="flex items-center justify-between gap-4">
+                <main className="flex-1 space-y-4 md:space-y-8 p-4 md:p-8 lg:p-10">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center shadow-md">
+                    <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center shadow-md shrink-0">
                         <FolderKanban className="h-6 w-6 text-primary-foreground" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">制作工程管理マネージャー</h1>
-                        <p className="text-muted-foreground">生産タスクとスケジュールを管理するためのアプリケーション</p>
+                        <h1 className="text-xl md:text-3xl font-bold tracking-tight text-foreground">制作工程管理マネージャー</h1>
+                        <p className="text-muted-foreground text-sm md:text-base">生産タスクとスケジュールを管理するためのアプリケーション</p>
                     </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end">
                         <CsvDownloadButton />
-                        <Button variant="outline" onClick={handleLogout}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            ログアウト
+                        <Button variant="outline" onClick={handleLogout} size="sm">
+                            <LogOut className="mr-0 md:mr-2 h-4 w-4" />
+                           <span className="hidden md:inline">ログアウト</span>
                         </Button>
                     </div>
                 </div>
                 <Tabs defaultValue="overall" className="w-full">
-                    <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 md:w-auto h-auto">
-                    <TabsTrigger value="overall" className="py-2">
-                        <FolderKanban className="mr-2 h-4 w-4" />
-                        全体管理
-                    </TabsTrigger>
-                    <TabsTrigger value="schedule" className="py-2">
-                        <CalendarClock className="mr-2 h-4 w-4" />
-                        月間スケジュール
-                    </TabsTrigger>
-                    <TabsTrigger value="deadline" className="py-2">
-                        <CalendarClock className="mr-2 h-4 w-4" />
-                        納期カレンダー
-                    </TabsTrigger>
-                    </TabsList>
+                    <ScrollArea className="w-full whitespace-nowrap">
+                        <TabsList className="grid-cols-none inline-grid">
+                        <TabsTrigger value="overall" className="py-2">
+                            <FolderKanban className="mr-2 h-4 w-4" />
+                            全体管理
+                        </TabsTrigger>
+                        <TabsTrigger value="schedule" className="py-2">
+                            <CalendarClock className="mr-2 h-4 w-4" />
+                            月間スケジュール
+                        </TabsTrigger>
+                        <TabsTrigger value="deadline" className="py-2">
+                            <CalendarClock className="mr-2 h-4 w-4" />
+                            納期カレンダー
+                        </TabsTrigger>
+                        </TabsList>
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
                     <Card className="mt-6">
-                    <TabsContent value="overall" className="m-0 p-6">
+                    <TabsContent value="overall" className="m-0 p-4 md:p-6">
                         <OverallManagementTab />
                     </TabsContent>
-                    <TabsContent value="schedule" className="m-0 p-6">
+                    <TabsContent value="schedule" className="m-0 p-4 md:p-6">
                         <MonthlyScheduleTab />
                     </TabsContent>
-                    <TabsContent value="deadline" className="m-0 p-6">
+                    <TabsContent value="deadline" className="m-0 p-4 md:p-6">
                         <DeadlineCalendarTab />
                     </TabsContent>
                     </Card>

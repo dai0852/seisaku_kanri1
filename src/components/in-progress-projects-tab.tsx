@@ -165,7 +165,7 @@ export function InProgressProjectsTab() {
 
   return (
     <div className="space-y-4">
-        <Accordion type="multiple" className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Accordion type="multiple" className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {inProgressProjects.map(project => (
             <ProjectCard key={project.id} project={project} />
           ))}

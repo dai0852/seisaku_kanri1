@@ -33,9 +33,9 @@ export function OverallManagementTab() {
         </Card>
       </div>
 
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between flex-wrap gap-4">
         <h2 className="text-2xl font-bold tracking-tight">プロジェクト一覧</h2>
-         <div className="flex items-center gap-2">
+         <div className="flex items-center gap-2 self-end md:self-auto">
             <AddProjectDialog>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />

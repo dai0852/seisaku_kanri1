@@ -113,14 +113,14 @@ export function MonthlyScheduleTab() {
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
+    <div className="flex flex-col lg:flex-row gap-6">
       <div className="flex-grow space-y-4">
         <Card>
-            <CardContent className="p-4 flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium">担当部署で絞り込み</h3>
+            <CardContent className="p-4 flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-2 flex-grow">
+                    <h3 className="text-sm font-medium shrink-0">担当部署で絞り込み</h3>
                     <Select value={selectedDepartment} onValueChange={(value) => setSelectedDepartment(value as Department | 'all')}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full md:w-[180px]">
                             <SelectValue placeholder="部署を選択" />
                         </SelectTrigger>
                         <SelectContent>
@@ -129,10 +129,10 @@ export function MonthlyScheduleTab() {
                         </SelectContent>
                     </Select>
                 </div>
-                 <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium">プロジェクトで絞り込み</h3>
+                 <div className="flex flex-col md:flex-row items-start md:items-center gap-2 flex-grow">
+                    <h3 className="text-sm font-medium shrink-0">プロジェクトで絞り込み</h3>
                     <Select value={selectedProjectId} onValueChange={(value) => setSelectedProjectId(value as string | 'all')}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full md:w-[180px]">
                             <SelectValue placeholder="プロジェクトを選択" />
                         </SelectTrigger>
                         <SelectContent>
@@ -151,7 +151,7 @@ export function MonthlyScheduleTab() {
           itemTypes={['task']}
         />
       </div>
-       <div className="w-full md:w-64">
+       <div className="w-full lg:w-64 shrink-0">
         <ProjectLegend projects={projectsInCalendar} />
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
