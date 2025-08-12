@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderKanban, CalendarClock, LogOut } from "lucide-react";
+import { FolderKanban, CalendarClock, LogOut, Download } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MonthlyScheduleTab } from "@/components/monthly-schedule-tab";
 import { DeadlineCalendarTab } from "@/components/deadline-calendar-tab";
@@ -11,8 +11,92 @@ import { Button } from "./ui/button";
 import { getFirebaseInstances } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { FullPageLoader } from "./full-page-loader";
-import { AppProvider } from "@/context/app-context";
+import { AppProvider, useAppContext } from "@/context/app-context";
 import { DndWrapper } from "@/context/dnd-provider";
+import type { Project } from "@/lib/types";
+import { parseISO, compareAsc } from "date-fns";
+
+const CsvDownloadButton = () => {
+    const { allProjects } = useAppContext();
+
+    const escapeCSV = (value: any) => {
+        const strValue = String(value ?? ''); // Handle null/undefined
+        if (/[",\n]/.test(strValue)) {
+            return `"${strValue.replace(/"/g, '""')}"`;
+        }
+        return strValue;
+    };
+
+    const convertToCSV = (projects: Project[]) => {
+        const maxTasks = Math.max(0, ...projects.map(p => p.tasks?.length || 0));
+
+        const baseHeader = [
+            "物件ID", "物件名", "納期", "担当営業", "担当デザイナー",
+            "リンク", "プロジェクト備考", "ステータス"
+        ];
+
+        const taskHeaders: string[] = [];
+        for (let i = 1; i <= maxTasks; i++) {
+            taskHeaders.push(`工程タスク${i}`);
+            taskHeaders.push(`工程タスク${i}期日`);
+            taskHeaders.push(`工程タスク${i}担当部署`);
+            taskHeaders.push(`工程タスク${i}完了`);
+            taskHeaders.push(`工程タスク${i}備考`);
+        }
+
+        const header = [...baseHeader, ...taskHeaders];
+
+        const rows = projects.map(p => {
+            const projectRow = [
+                p.id, p.name, p.deadline, p.salesRep, p.designer,
+                p.link, p.notes, p.status
+            ];
+
+            const taskRowItems: (string | boolean | undefined)[] = [];
+            const sortedTasks = [...(p.tasks || [])].sort((a, b) => compareAsc(parseISO(a.dueDate), parseISO(b.dueDate)));
+
+            for (let i = 0; i < maxTasks; i++) {
+                const task = sortedTasks[i];
+                if (task) {
+                    taskRowItems.push(task.name);
+                    taskRowItems.push(task.dueDate);
+                    taskRowItems.push(task.department);
+                    taskRowItems.push(task.completed ? 'はい' : 'いいえ');
+                    taskRowItems.push(task.notes || '');
+                } else {
+                    taskRowItems.push('', '', '', '', '');
+                }
+            }
+
+            const fullRow = [...projectRow, ...taskRowItems];
+            return fullRow.map(escapeCSV).join(',');
+        });
+
+        return [header.join(','), ...rows].join('\n');
+    };
+
+    const handleDownloadCSV = () => {
+        const csvData = convertToCSV(allProjects);
+        const blob = new Blob([`\uFEFF${csvData}`], { type: 'text/csv;charset=utf-8;' }); // Add BOM for Excel
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
+        link.setAttribute("download", `all_projects_with_tasks_${timestamp}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    return (
+        <Button variant="outline" onClick={handleDownloadCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            全物件データをCSVダウンロード
+        </Button>
+    )
+}
 
 export function MainContent() {
   const { user, approved, loading } = useAuth();
@@ -67,10 +151,13 @@ export function MainContent() {
                         <p className="text-muted-foreground">生産タスクとスケジュールを管理するためのアプリケーション</p>
                     </div>
                     </div>
-                    <Button variant="outline" onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    ログアウト
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <CsvDownloadButton />
+                        <Button variant="outline" onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            ログアウト
+                        </Button>
+                    </div>
                 </div>
                 <Tabs defaultValue="overall" className="w-full">
                     <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 md:w-auto h-auto">
