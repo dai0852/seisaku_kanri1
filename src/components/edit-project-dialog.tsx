@@ -85,7 +85,6 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
             link: project.link || "",
             notes: project.notes || "",
             tasks: sortedTasks
-                .filter(t => t.name !== '納品') // Exclude delivery task from editable tasks
                 .map(task => ({
                     ...task,
                     dueDate: parseISO(task.dueDate),
@@ -101,38 +100,37 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
   });
 
   const deadlineValue = watch("deadline");
+  const tasksValue = watch("tasks");
+
+  // Sync deadline with "納品" task's due date and vice versa
+  useEffect(() => {
+    const deliveryTaskIndex = tasksValue.findIndex(t => t.name === '納品');
+    if (deliveryTaskIndex !== -1) {
+      const deliveryTaskDueDate = tasksValue[deliveryTaskIndex].dueDate;
+      if (deliveryTaskDueDate && deadlineValue && compareAsc(deliveryTaskDueDate, deadlineValue) !== 0) {
+        setValue("deadline", deliveryTaskDueDate, { shouldDirty: true });
+      }
+    }
+  }, [tasksValue, deadlineValue, setValue]);
+
+  useEffect(() => {
+    const deliveryTaskIndex = tasksValue.findIndex(t => t.name === '納品');
+    if (deliveryTaskIndex !== -1) {
+       const deliveryTaskDueDate = tasksValue[deliveryTaskIndex].dueDate;
+       if (deadlineValue && (!deliveryTaskDueDate || compareAsc(deliveryTaskDueDate, deadlineValue) !== 0)) {
+         setValue(`tasks.${deliveryTaskIndex}.dueDate`, deadlineValue, { shouldDirty: true });
+       }
+    }
+  }, [deadlineValue, tasksValue, setValue]);
+
 
   const onSubmit: SubmitHandler<ProjectFormValues> = (data) => {
-    const originalDeliveryTask = project.tasks.find(t => t.name === '納品');
-    
     const formattedTasks = data.tasks.map((task) => ({
       ...task,
       id: task.id || `task-${Date.now()}-${Math.random()}`,
       dueDate: format(task.dueDate, "yyyy-MM-dd"),
       notes: task.notes || ""
     }));
-
-    if (originalDeliveryTask) {
-        const deliveryTaskDueDate = format(data.deadline, "yyyy-MM-dd");
-        if(originalDeliveryTask.dueDate !== deliveryTaskDueDate) {
-            originalDeliveryTask.dueDate = deliveryTaskDueDate;
-        }
-        // Make sure to preserve completion status of the delivery task
-        formattedTasks.push({
-            ...originalDeliveryTask,
-            dueDate: deliveryTaskDueDate
-        });
-    } else {
-        // If for some reason there was no delivery task, create one.
-         formattedTasks.push({
-            id: `task-${Date.now()}-delivery`,
-            name: "納品",
-            department: "配送課" as Department,
-            dueDate: format(data.deadline, "yyyy-MM-dd"),
-            notes: "",
-            completed: false
-        });
-    }
 
     const sortedFormattedTasks = [...formattedTasks].sort((a, b) => compareAsc(parseISO(a.dueDate), parseISO(b.dueDate)));
     
@@ -232,7 +230,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                         />
                       <div className="col-span-1 md:col-span-12">
                         <Label>タスク名</Label>
-                        <Input {...register(`tasks.${index}.name`)} />
+                        <Input {...register(`tasks.${index}.name`)} disabled={field.name === '納品'} />
                         {errors.tasks?.[index]?.name && <p className="text-sm text-destructive">{errors.tasks[index]?.name?.message}</p>}
                       </div>
                       <div className="col-span-1 md:col-span-6">
@@ -240,8 +238,12 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                          <Controller
                             control={control}
                             name={`tasks.${index}.department`}
-                            render={({ field }) => (
-                                <Select onValueChange={(value) => field.onChange(value as Department)} value={field.value}>
+                            render={({ field: controllerField }) => (
+                                <Select 
+                                  onValueChange={(value) => controllerField.onChange(value as Department)} 
+                                  value={controllerField.value}
+                                  disabled={field.name === '納品'}
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="部署を選択" />
                                     </SelectTrigger>
@@ -258,22 +260,22 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                         <Controller
                           control={control}
                           name={`tasks.${index}.dueDate`}
-                          render={({ field }) => (
+                          render={({ field: controllerField }) => (
                             <Popover modal={true}>
                                 <PopoverTrigger asChild>
                                     <Button
                                     variant={"outline"}
-                                    className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}
+                                    className={cn("w-full justify-start text-left font-normal", !controllerField.value && "text-muted-foreground")}
                                     >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? format(field.value, "PPP", { locale: ja }) : <span>日付を選択</span>}
+                                    {controllerField.value ? format(controllerField.value, "PPP", { locale: ja }) : <span>日付を選択</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
                                     <Calendar
                                     mode="single"
-                                    selected={field.value}
-                                    onSelect={(date) => field.onChange(date)}
+                                    selected={controllerField.value}
+                                    onSelect={(date) => controllerField.onChange(date)}
                                     initialFocus
                                     locale={ja}
                                     />
@@ -287,7 +289,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                         <Label>備考</Label>
                         <Textarea {...register(`tasks.${index}.notes`)} />
                       </div>
-                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-muted-foreground hover:text-destructive" onClick={() => remove(index)}>
+                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-muted-foreground hover:text-destructive" onClick={() => remove(index)} disabled={field.name === '納品'}>
                           <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

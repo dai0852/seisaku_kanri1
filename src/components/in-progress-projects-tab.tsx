@@ -123,7 +123,6 @@ const ProjectCard = ({ project }: { project: Project }) => {
                                                 size="icon" 
                                                 className="h-7 w-7 self-center opacity-0 group-hover/task:opacity-100 transition-opacity"
                                                 onClick={() => handleEditTask(task)}
-                                                disabled={task.name === '納品'}
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>

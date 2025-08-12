@@ -160,7 +160,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     const updates: Partial<Project> = { tasks: updatedTasks };
 
-    if (project.tasks.find(t => t.id === taskId)?.name === '納品' && updatedData.dueDate) {
+    const taskBeingUpdated = project.tasks.find(t => t.id === taskId);
+    if (taskBeingUpdated?.name === '納品' && updatedData.dueDate) {
         updates.deadline = updatedData.dueDate;
     }
 
