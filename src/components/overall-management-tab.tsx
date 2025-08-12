@@ -10,6 +10,7 @@ import { useAppContext } from "@/context/app-context";
 import { AddProjectDialog } from "./add-project-dialog";
 import { Button } from "./ui/button";
 import type { Project } from "@/lib/types";
+import { parseISO, compareAsc } from "date-fns";
 
 export function OverallManagementTab() {
   const { projects, allProjects } = useAppContext()
@@ -27,22 +28,48 @@ export function OverallManagementTab() {
   };
 
   const convertToCSV = (projects: Project[]) => {
-    const header = [
-      "プロジェクトID", "物件名", "納期", "担当営業", "担当デザイナー", 
-      "リンク", "プロジェクト備考", "ステータス", "工程タスク一覧"
+    const maxTasks = Math.max(0, ...projects.map(p => p.tasks?.length || 0));
+
+    const baseHeader = [
+      "物件ID", "物件名", "納期", "担当営業", "担当デザイナー", 
+      "リンク", "プロジェクト備考", "ステータス"
     ];
+    
+    const taskHeaders: string[] = [];
+    for (let i = 1; i <= maxTasks; i++) {
+        taskHeaders.push(`工程タスク${i}`);
+        taskHeaders.push(`工程タスク${i}期日`);
+        taskHeaders.push(`工程タスク${i}担当部署`);
+        taskHeaders.push(`工程タスク${i}完了`);
+        taskHeaders.push(`工程タスク${i}備考`);
+    }
+
+    const header = [...baseHeader, ...taskHeaders];
 
     const rows = projects.map(p => {
-        const tasksString = (p.tasks || [])
-            .map((t, index) => `${index + 1}. ${t.name} (部署: ${t.department}, 期日: ${t.dueDate}, 完了: ${t.completed ? 'はい' : 'いいえ'}, 備考: ${t.notes || 'なし'})`)
-            .join('\n'); // Use newline to separate tasks within a cell
-
         const projectRow = [
             p.id, p.name, p.deadline, p.salesRep, p.designer,
-            p.link, p.notes, p.status,
-            tasksString
+            p.link, p.notes, p.status
         ];
-        return projectRow.map(escapeCSV).join(',');
+
+        const taskRowItems: (string | boolean | undefined)[] = [];
+        const sortedTasks = [...(p.tasks || [])].sort((a, b) => compareAsc(parseISO(a.dueDate), parseISO(b.dueDate)));
+
+        for (let i = 0; i < maxTasks; i++) {
+            const task = sortedTasks[i];
+            if (task) {
+                taskRowItems.push(task.name);
+                taskRowItems.push(task.dueDate);
+                taskRowItems.push(task.department);
+                taskRowItems.push(task.completed ? 'はい' : 'いいえ');
+                taskRowItems.push(task.notes || '');
+            } else {
+                taskRowItems.push('', '', '', '', '');
+            }
+        }
+        
+        const fullRow = [...projectRow, ...taskRowItems];
+        return fullRow.map(escapeCSV).join(',');
     });
 
     return [header.join(','), ...rows].join('\n');
