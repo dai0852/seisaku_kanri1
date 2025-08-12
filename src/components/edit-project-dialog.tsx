@@ -104,6 +104,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
 
   // Sync deadline with "納品" task's due date and vice versa
   useEffect(() => {
+    if (!tasksValue) return;
     const deliveryTaskIndex = tasksValue.findIndex(t => t.name === '納品');
     if (deliveryTaskIndex !== -1) {
       const deliveryTaskDueDate = tasksValue[deliveryTaskIndex].dueDate;
@@ -114,6 +115,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
   }, [tasksValue, deadlineValue, setValue]);
 
   useEffect(() => {
+    if (!tasksValue) return;
     const deliveryTaskIndex = tasksValue.findIndex(t => t.name === '納品');
     if (deliveryTaskIndex !== -1) {
        const deliveryTaskDueDate = tasksValue[deliveryTaskIndex].dueDate;
@@ -230,7 +232,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                         />
                       <div className="col-span-1 md:col-span-12">
                         <Label>タスク名</Label>
-                        <Input {...register(`tasks.${index}.name`)} disabled={field.name === '納品'} />
+                        <Input {...register(`tasks.${index}.name`)} />
                         {errors.tasks?.[index]?.name && <p className="text-sm text-destructive">{errors.tasks[index]?.name?.message}</p>}
                       </div>
                       <div className="col-span-1 md:col-span-6">
@@ -242,13 +244,12 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                                 <Select 
                                   onValueChange={(value) => controllerField.onChange(value as Department)} 
                                   value={controllerField.value}
-                                  disabled={field.name === '納品'}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="部署を選択" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {DEPARTMENTS.filter(d => d !== '配送課').map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
+                                        {DEPARTMENTS.map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             )}
@@ -289,7 +290,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                         <Label>備考</Label>
                         <Textarea {...register(`tasks.${index}.notes`)} />
                       </div>
-                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-muted-foreground hover:text-destructive" onClick={() => remove(index)} disabled={field.name === '納品'}>
+                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-muted-foreground hover:text-destructive" onClick={() => remove(index)}>
                           <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

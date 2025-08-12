@@ -14,7 +14,6 @@ import { Progress } from "./ui/progress"
 import type { Project, Task } from "@/lib/types"
 import { EditProjectDialog } from "./edit-project-dialog"
 import { compareAsc, parseISO } from "date-fns"
-import { EditTaskDialog } from "./edit-task-dialog"
 
 const ProjectCard = ({ project }: { project: Project }) => {
     const { updateTask, deleteProject } = useAppContext()
