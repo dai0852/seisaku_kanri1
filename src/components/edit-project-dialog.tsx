@@ -143,11 +143,18 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
     });
     onOpenChange(false);
   };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown}>
           <DialogHeader>
             <DialogTitle>物件情報を編集</DialogTitle>
             <DialogDescription>

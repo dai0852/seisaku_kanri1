@@ -102,12 +102,18 @@ export function AddProjectDialog({ children }: { children: React.ReactNode }) {
     reset();
     setOpen(false);
   };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-2xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown}>
           <DialogHeader>
             <DialogTitle>新規物件を追加</DialogTitle>
             <DialogDescription>
