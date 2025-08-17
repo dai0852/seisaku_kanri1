@@ -13,6 +13,7 @@ import { useDrag } from "react-dnd";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { format, parseISO, compareAsc } from "date-fns";
 import { ja } from "date-fns/locale";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 type DraggableItem = {
     id: string;
@@ -126,25 +127,33 @@ export function DeadlineCalendarTab() {
                                     {project.status === 'in-progress' ? '進行中' : '完了'}
                                 </Badge>
                             </div>
-                            <div className="p-4 space-y-3">
-                                <h4 className="text-sm font-semibold">工程タスク</h4>
-                                {sortedTasks.length > 0 ? (
-                                    sortedTasks.map(task => (
-                                        <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3">
-                                            <div className="grid gap-0.5 w-full">
-                                                <div className="flex items-center justify-between">
-                                                    <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>{task.name}</span>
-                                                    <Badge variant="secondary">{task.department}</Badge>
-                                                </div>
-                                                <p className="text-sm text-muted-foreground">期限: {format(parseISO(task.dueDate), "yyyy/MM/dd")}</p>
-                                                {task.notes && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{task.notes}</p>}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">このプロジェクトにはタスクがありません。</p>
-                                )}
-                            </div>
+                            <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="tasks" className="border-b-0">
+                                    <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline">
+                                        工程タスク詳細
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                      <div className="px-4 pb-4 space-y-3">
+                                          {sortedTasks.length > 0 ? (
+                                              sortedTasks.map(task => (
+                                                  <div key={task.id} className="flex items-start gap-3 rounded-md bg-muted/50 p-3">
+                                                      <div className="grid gap-0.5 w-full">
+                                                          <div className="flex items-center justify-between">
+                                                              <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>{task.name}</span>
+                                                              <Badge variant="secondary">{task.department}</Badge>
+                                                          </div>
+                                                          <p className="text-sm text-muted-foreground">期限: {format(parseISO(task.dueDate), "yyyy/MM/dd")}</p>
+                                                          {task.notes && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{task.notes}</p>}
+                                                      </div>
+                                                  </div>
+                                              ))
+                                          ) : (
+                                              <p className="text-sm text-muted-foreground">このプロジェクトにはタスクがありません。</p>
+                                          )}
+                                      </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
                         </div>
                     )
                 })
