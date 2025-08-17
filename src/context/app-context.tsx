@@ -101,6 +101,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const projectDoc = doc(dbInstance, "projects", projectId);
     try {
       const dataToUpdate: Partial<Project> = { ...updatedData };
+      
+      // If deadline is being updated, also update the "納品" task's due date.
+      if (updatedData.deadline) {
+        const projectToUpdate = internalProjects.find(p => p.id === projectId);
+        if (projectToUpdate) {
+            const deliveryTaskIndex = projectToUpdate.tasks.findIndex(t => t.name === '納品');
+            if (deliveryTaskIndex > -1) {
+                const updatedTasks = [...projectToUpdate.tasks];
+                updatedTasks[deliveryTaskIndex] = {
+                    ...updatedTasks[deliveryTaskIndex],
+                    dueDate: updatedData.deadline,
+                };
+                dataToUpdate.tasks = updatedTasks;
+            }
+        }
+      }
+
       if (updatedData.tasks) {
         dataToUpdate.tasks = updatedData.tasks;
       }
@@ -124,7 +141,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [user, dbInstance, toast]);
+  }, [user, dbInstance, toast, internalProjects]);
 
   const deleteProject = useCallback(async (projectId: string) => {
     if (!user || !dbInstance) return;
